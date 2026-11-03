@@ -197,15 +197,15 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') 
   const seenIds = new Set();
 
   for (const kw of selectedKeywords) {
-    const results = await searchSongs(kw, 3);
+    const results = await searchSongs(kw, 5);
     for (const song of results) {
       if (!seenIds.has(song.id)) {
         seenIds.add(song.id);
         allTracks.push(song);
-        break; // 每個關鍵字取首筆最吻合的
+        break; // 每個關鍵字取首筆最吻合的作為題目，其餘自動進入 SUGGESTION_CATALOG 作為同歌手干擾項！
       }
     }
-    if (allTracks.length >= count + 4) break;
+    if (allTracks.length >= count) break;
   }
 
   // 如果網路不通抓到的歌不足，自動以備援歌庫補足
@@ -219,8 +219,8 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') 
     }
   }
 
-  // 隨機打亂
-  return allTracks.sort(() => Math.random() - 0.5);
+  // 隨機打亂並回傳指定題數
+  return allTracks.sort(() => Math.random() - 0.5).slice(0, count);
 }
 
 /**
@@ -309,29 +309,105 @@ export function fuzzyMatchSongTitle(input, targetTitle, targetArtist = '') {
 }
 
 /**
- * 產生選項（四選一或八選一快速候選面板）
+ * 產生高難度防刪去法選項（優先挑選「同歌手其他代表作」＋「排除本局已播過題目」）
  * @param {object} correctTrack 正確歌曲
- * @param {Array} poolOfTracks 候選歌曲池
- * @param {number} totalChoices 產生的選項總數 (預設 4，快篩可用 8)
+ * @param {Array} poolOfTracks 候選歌曲池 (通常為本局 tracks 或題庫)
+ * @param {number} totalChoices 產生的選項總數 (預設 4)
+ * @param {Array} playedTracks 本局已揭曉過的題目 (避免玩家用「這首剛剛播過了」刪去)
  * @returns {Array} 打亂的選項陣列 [{ id, title, artist, displayText }]
  */
-export function generateChoices(correctTrack, poolOfTracks, totalChoices = 4) {
-  // 過濾掉與正解相同的歌曲
-  const otherTracks = poolOfTracks.filter(t => t.id !== correctTrack.id);
-  
-  // 隨機選取干擾項
-  const shuffledOthers = [...otherTracks].sort(() => Math.random() - 0.5);
-  const distractors = shuffledOthers.slice(0, totalChoices - 1);
+export function generateChoices(correctTrack, poolOfTracks = [], totalChoices = 4, playedTracks = []) {
+  const needed = totalChoices - 1;
+  const correctNormTitle = normalizeSongTitle(correctTrack.title);
+  const correctArtist = (correctTrack.artist || '').toLowerCase().trim();
+
+  // 記錄不可出現的歌名（正解本身 ＋ 本局所有題目，避免劇透或用「剛剛播過」刪去法）
+  const forbiddenTitles = new Set([correctNormTitle]);
+  for (const pt of playedTracks) {
+    if (pt && pt.title) forbiddenTitles.add(normalizeSongTitle(pt.title));
+  }
+  for (const rt of poolOfTracks) {
+    if (rt && rt.title && rt.id !== correctTrack.id) {
+      forbiddenTitles.add(normalizeSongTitle(rt.title));
+    }
+  }
+
+  const distractors = [];
+  const usedNormTitles = new Set([correctNormTitle]);
+
+  const tryAddDistractor = (song, idxSuffix) => {
+    if (!song || !song.title) return false;
+    const normT = normalizeSongTitle(song.title);
+    if (!normT || usedNormTitles.has(normT)) return false;
+    usedNormTitles.add(normT);
+    distractors.push({
+      id: song.id || `dist_${idxSuffix}_${Math.random().toString(36).slice(2, 7)}`,
+      title: song.title,
+      artist: song.artist || correctTrack.artist || '',
+      displayText: `${song.title} - ${song.artist || correctTrack.artist || ''}`
+    });
+    return true;
+  };
+
+  // 1. 第一優先：從全域曲庫尋找「同一位歌手」的其他歌曲（讓玩家無法靠聽出歌手聲音或男女聲刪去！）
+  if (correctArtist && SUGGESTION_CATALOG.size > 0) {
+    const sameArtistSongs = [];
+    for (const song of SUGGESTION_CATALOG.values()) {
+      const a = (song.artist || '').toLowerCase().trim();
+      const normT = normalizeSongTitle(song.title);
+      if (
+        !forbiddenTitles.has(normT) &&
+        !usedNormTitles.has(normT) &&
+        (a === correctArtist || a.includes(correctArtist) || correctArtist.includes(a))
+      ) {
+        sameArtistSongs.push(song);
+      }
+    }
+    sameArtistSongs.sort(() => Math.random() - 0.5);
+    for (const s of sameArtistSongs) {
+      if (distractors.length >= needed) break;
+      tryAddDistractor(s, 'same_artist');
+    }
+  }
+
+  // 2. 第二優先：從全域曲庫挑選未曾在本局出現過的同語系歌曲（絕不優先拿本局已播過的歌）
+  if (distractors.length < needed && SUGGESTION_CATALOG.size > 0) {
+    const isAsciiTitle = /^[a-z0-9\s.,!?'-]+$/i.test(correctTrack.title || '');
+    const catalogCandidates = [];
+    for (const song of SUGGESTION_CATALOG.values()) {
+      const normT = normalizeSongTitle(song.title);
+      if (forbiddenTitles.has(normT) || usedNormTitles.has(normT)) continue;
+      const songIsAscii = /^[a-z0-9\s.,!?'-]+$/i.test(song.title || '');
+      if (songIsAscii === isAsciiTitle) {
+        catalogCandidates.push(song);
+      }
+    }
+    catalogCandidates.sort(() => Math.random() - 0.5);
+    for (const s of catalogCandidates) {
+      if (distractors.length >= needed) break;
+      tryAddDistractor(s, 'cat');
+    }
+  }
+
+  // 3. 最後保底：若傳入的 poolOfTracks 還有剩餘（例如單純單元測試時）
+  if (distractors.length < needed) {
+    const shuffledPool = [...poolOfTracks].filter(t => t.id !== correctTrack.id).sort(() => Math.random() - 0.5);
+    for (const s of shuffledPool) {
+      if (distractors.length >= needed) break;
+      tryAddDistractor(s, 'pool');
+    }
+  }
 
   // 合併正解並打亂順序
-  const choices = [correctTrack, ...distractors]
-    .map(t => ({
-      id: t.id,
-      title: t.title,
-      artist: t.artist,
-      displayText: `${t.title} - ${t.artist}`
-    }))
-    .sort(() => Math.random() - 0.5);
+  const choices = [
+    {
+      id: correctTrack.id,
+      title: correctTrack.title,
+      artist: correctTrack.artist,
+      displayText: `${correctTrack.title} - ${correctTrack.artist}`
+    },
+    ...distractors
+  ].sort(() => Math.random() - 0.5);
 
   return choices;
 }

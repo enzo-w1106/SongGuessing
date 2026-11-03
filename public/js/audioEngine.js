@@ -6,22 +6,58 @@ export class AudioEngine {
   constructor() {
     this.audioElement = new Audio();
     this.audioElement.preload = 'auto';
+    this.audioElement.playsInline = true;
+    this.audioElement.setAttribute('playsinline', '');
+    this.audioElement.setAttribute('webkit-playsinline', '');
     this.audioCache = new Map(); // url -> ObjectURL
     this.audioContext = null;
     this.fadeInterval = null;
     this.playTimer = null;
+    this.htmlAudioUnlocked = false;
+    this.onAutoplayBlocked = null;
+
+    // 綁定全域首次點擊/觸控自動解鎖手機瀏覽器音訊限制 (iOS Safari / Android Chrome)
+    const unlockHandler = () => {
+      this.initContext();
+    };
+    window.addEventListener('touchstart', unlockHandler, { passive: true, once: true });
+    window.addEventListener('click', unlockHandler, { passive: true, once: true });
   }
 
   /**
-   * 初始化 Web Audio API (需使用者手勢觸發)
+   * 初始化 Web Audio API 與解鎖手機 HTML5 Audio (需使用者手勢觸發)
    */
   initContext() {
-    if (!this.audioContext) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.audioContext = new AudioCtx();
-    }
-    if (this.audioContext.state === 'suspended') {
-      this.audioContext.resume();
+    try {
+      if (!this.audioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.audioContext = new AudioCtx();
+      }
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+    } catch (e) {}
+
+    // 同步解鎖手機端 HTMLAudioElement (解決手機在 WebSocket 事件中無法自動出聲的問題)
+    if (!this.htmlAudioUnlocked && this.audioElement) {
+      this.htmlAudioUnlocked = true;
+      try {
+        const silentWav = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+        this.audioElement.src = silentWav;
+        this.audioElement.volume = 0.01;
+        const p = this.audioElement.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            this.audioElement.pause();
+            this.audioElement.currentTime = 0;
+            this.audioElement.volume = 1.0;
+          }).catch(() => {
+            this.htmlAudioUnlocked = false;
+          });
+        }
+      } catch (e) {
+        this.htmlAudioUnlocked = false;
+      }
     }
   }
 
@@ -64,7 +100,9 @@ export class AudioEngine {
    */
   async playSnippet(url, durationSec, onEnd) {
     this.stop();
+    this.htmlAudioUnlocked = true;
     const sourceUrl = this.audioCache.get(url) || url;
+    this.audioElement.loop = false;
     this.audioElement.src = sourceUrl;
     this.audioElement.volume = 1.0;
 
@@ -91,6 +129,7 @@ export class AudioEngine {
       }, Math.max(100, playDurationMs - fadeDuration));
     } catch (err) {
       console.warn('音訊自動播放被瀏覽器阻擋，需點擊畫面放音:', err);
+      if (this.onAutoplayBlocked) this.onAutoplayBlocked();
     }
   }
 
@@ -99,6 +138,7 @@ export class AudioEngine {
    */
   async playFull(url) {
     this.stop();
+    this.htmlAudioUnlocked = true;
     const sourceUrl = this.audioCache.get(url) || url;
     this.audioElement.src = sourceUrl;
     this.audioElement.volume = 1.0;
@@ -107,6 +147,7 @@ export class AudioEngine {
       await this.audioElement.play();
     } catch (err) {
       console.warn('副歌播放受阻:', err);
+      if (this.onAutoplayBlocked) this.onAutoplayBlocked();
     }
   }
 

@@ -65,3 +65,20 @@ test('getAutocompleteSuggestions 輸入「蔡」應跳出蔡相關人名與歌�
   // 當前正確答案有符合「蔡」，必須被包含在候選清單中
   assert.ok(suggestions.some(s => s.title === '馬德里不思議'));
 });
+
+test('generateChoices 四選一應優先挑選同歌手干擾項，且絕不出現已播過的題目', () => {
+  const correctSong = { id: 'jay_1', title: '晴天', artist: '周杰倫' };
+  const playedTracks = [
+    { id: 'jay_old', title: '七里香', artist: '周杰倫' },
+    { id: 'old_2', title: '十年', artist: '陳奕迅' }
+  ];
+  const choices = generateChoices(correctSong, [], 4, playedTracks);
+  assert.equal(choices.length, 4);
+  // 包含正確答案
+  assert.ok(choices.some(c => c.title === '晴天'));
+  // 絕不包含已播過的七里香或十年
+  assert.ok(!choices.some(c => c.title === '七里香'));
+  assert.ok(!choices.some(c => c.title === '十年'));
+  // 因為 SUGGESTION_CATALOG 內有多首周杰倫歌曲，4 個選項都應該是周杰倫的歌
+  assert.ok(choices.every(c => c.artist === '周杰倫'));
+});

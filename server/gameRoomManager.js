@@ -226,9 +226,13 @@ export class GameRoomManager {
   /**
    * 開始遊戲 (房主觸發)
    */
-  async startGame(roomCode, socketId) {
+  async startGame(roomCode, socketId, initialSettings = null) {
     const room = this.rooms.get(roomCode);
     if (!room || room.hostId !== socketId) return false;
+
+    if (initialSettings && typeof initialSettings === 'object') {
+      room.settings = { ...room.settings, ...initialSettings };
+    }
 
     // 清空上一局累計分數（若重新開始）
     for (const p of room.players.values()) {
@@ -284,12 +288,41 @@ export class GameRoomManager {
     room.stage3Answers.clear();
     room.buzzerWinner = null;
 
-    // 產生選項 (4選1 與 8選1 快篩)
-    room.currentChoices = generateChoices(room.currentTrack, room.tracks, 4);
-    room.currentFastChoices = generateChoices(room.currentTrack, room.tracks, 8);
+    // 產生高難度防刪去法選項 (優先抽同歌手其他歌曲，並排除本局已播過題目)
+    const playedTracks = room.tracks.slice(0, room.currentRoundIndex);
+    room.currentChoices = generateChoices(room.currentTrack, room.tracks, 4, playedTracks);
 
     // 進入 Stage 1: 1.2 秒前奏搶答
     this.startStage1(roomCode);
+  }
+
+  /**
+   * 重新開始新的一局 (結算畫面時任何房內玩家或房主皆可觸發回到大廳)
+   */
+  restartGame(roomCode, socketId) {
+    const room = this.rooms.get(roomCode);
+    if (!room || !room.players.has(socketId)) return false;
+    if (room.status !== 'GAME_OVER' && room.hostId !== socketId) return false;
+
+    if (room.stageTimer) {
+      clearTimeout(room.stageTimer);
+      room.stageTimer = null;
+    }
+
+    room.status = 'LOBBY';
+    room.currentStage = null;
+    room.currentTrack = null;
+    room.currentRoundIndex = -1;
+    room.buzzerWinner = null;
+    room.lockedOutPlayerIds.clear();
+    room.stage3Answers.clear();
+    room.players.forEach(p => {
+      p.score = 0;
+      p.streak = 0;
+    });
+
+    this.broadcastRoomState(roomCode);
+    return true;
   }
 
   /**

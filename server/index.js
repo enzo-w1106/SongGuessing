@@ -167,9 +167,9 @@ io.on('connection', (socket) => {
     socket.emit('submission_ack', res);
   });
 
-  // 開始遊戲
-  socket.on('start_game', async ({ roomCode }) => {
-    await roomManager.startGame(roomCode, socket.id);
+  // 開始遊戲 (同步最新設定)
+  socket.on('start_game', async ({ roomCode, settings }) => {
+    await roomManager.startGame(roomCode, socket.id, settings);
   });
 
   // 按鈴搶答 (Stage 1 / Stage 2)
@@ -220,13 +220,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 重新開始新的一局
+  // 重新開始新的一局 (結算畫面時參與者與房主皆可觸發回到大廳)
   socket.on('restart_game', ({ roomCode }) => {
-    const room = roomManager.rooms.get(roomCode);
-    if (room && room.hostId === socket.id) {
-      room.status = 'LOBBY';
-      roomManager.broadcastRoomState(roomCode);
-    }
+    roomManager.restartGame(roomCode, socket.id);
   });
 
   // 斷線處理

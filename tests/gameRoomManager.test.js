@@ -108,3 +108,21 @@ test('三階段搶答驗證：答對加分且揭曉、答錯扣分且不洩漏�
   assert.equal(hostPlayer.score, 200); // Stage 2 答對獲得 200 分
   assert.equal(room.currentStage, 'REVEAL'); // 答對即刻進入 REVEAL
 });
+
+test('結算畫面時，非房主參與者也能點擊「再玩一局」重置房間回大廳', () => {
+  const io = createMockIO();
+  const manager = new GameRoomManager(io);
+  const room = manager.createRoom('host_id', '房主');
+  manager.joinRoom(room.code, 'guest_id', '參與者小華');
+
+  room.status = 'GAME_OVER';
+  room.players.get('host_id').score = 500;
+  room.players.get('guest_id').score = 300;
+
+  // 由參與者小華觸發 restartGame
+  const ok = manager.restartGame(room.code, 'guest_id');
+  assert.equal(ok, true);
+  assert.equal(room.status, 'LOBBY');
+  assert.equal(room.players.get('host_id').score, 0);
+  assert.equal(room.players.get('guest_id').score, 0);
+});

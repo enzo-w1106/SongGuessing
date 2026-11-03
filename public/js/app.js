@@ -20,8 +20,14 @@ class CampfireSongApp {
     this.mySubmissionsCount = 0;
     this.selectedChoiceId = null;
     this.timerInterval = null;
+    this.lastPlayedStageKey = null;
 
     this.initElements();
+    this.audio.onAutoplayBlocked = () => {
+      if (this.btnManualPlayAudio) {
+        this.btnManualPlayAudio.style.display = 'inline-flex';
+      }
+    };
     this.initSpeechMatcher();
     this.initSocket();
     this.bindEvents();
@@ -48,6 +54,7 @@ class CampfireSongApp {
     this.qrInviteBanner = document.getElementById('qr-invite-banner');
     this.qrInviteRoomCode = document.getElementById('qr-invite-room-code');
     this.btnQuickJoinRoom = document.getElementById('btn-quick-join-room');
+    this.btnSwitchOtherRoom = document.getElementById('btn-switch-other-room');
     this.normalHomeActions = document.getElementById('normal-home-actions');
     this.inputPlayerName = document.getElementById('input-player-name');
     this.inputJoinCode = document.getElementById('input-join-code');
@@ -97,6 +104,7 @@ class CampfireSongApp {
     this.trackTitle = document.getElementById('track-title');
     this.trackArtist = document.getElementById('track-artist');
     this.trackSubmitterTag = document.getElementById('track-submitter-tag');
+    this.btnManualPlayAudio = document.getElementById('btn-manual-play-audio');
     this.stageStatusTitle = document.getElementById('stage-status-title');
     this.stageTimerText = document.getElementById('stage-timer-text');
     this.timerBarFill = document.getElementById('timer-bar-fill');
@@ -278,6 +286,48 @@ class CampfireSongApp {
       });
     }
 
+    // 切換加入其他房間按鈕 (解除 QR 綁定房號)
+    if (this.btnSwitchOtherRoom) {
+      this.btnSwitchOtherRoom.addEventListener('click', () => {
+        this.audio.initContext();
+        this.urlRoomCode = null;
+        this.inputJoinCode.value = '';
+        if (this.qrInviteBanner) this.qrInviteBanner.style.display = 'none';
+        if (this.btnQuickJoinRoom) this.btnQuickJoinRoom.style.display = 'none';
+        if (this.btnSwitchOtherRoom) this.btnSwitchOtherRoom.style.display = 'none';
+        if (this.normalHomeActions) this.normalHomeActions.style.display = 'block';
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (e) {}
+        this.inputJoinCode.focus();
+      });
+    }
+
+    // 手機手動開啟聲音 / 重播目前階段音樂按鈕
+    const replayCurrentRoundAudio = () => {
+      this.audio.initContext();
+      const round = this.roomState?.currentRound;
+      if (!round || !round.audioUrl) return;
+      this.vinylDisc.classList.add('spinning');
+      if (round.stage === 'STAGE_1') {
+        this.audio.playSnippet(round.audioUrl, 1.2, () => this.vinylDisc.classList.remove('spinning'));
+      } else if (round.stage === 'STAGE_2') {
+        this.audio.playSnippet(round.audioUrl, 3.5, () => this.vinylDisc.classList.remove('spinning'));
+      } else {
+        this.audio.playFull(round.audioUrl);
+      }
+    };
+
+    if (this.btnManualPlayAudio) {
+      this.btnManualPlayAudio.addEventListener('click', replayCurrentRoundAudio);
+    }
+    if (this.vinylDisc) {
+      this.vinylDisc.addEventListener('click', () => {
+        const shouldPlayAudio = (this.roomState?.settings?.speakerMode === 'all') || (this.isHost);
+        if (shouldPlayAudio) replayCurrentRoundAudio();
+      });
+    }
+
     this.inputPlayerName.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && this.urlRoomCode) {
         this.btnQuickJoinRoom.click();
@@ -364,7 +414,16 @@ class CampfireSongApp {
     // 開始遊戲按鈕 (房主)
     this.btnStartGame.addEventListener('click', () => {
       this.audio.initContext();
-      this.socket.emit('start_game', { roomCode: this.currentRoomCode });
+      const isCustom = (this.selectTheme.value === 'custom');
+      this.socket.emit('start_game', {
+        roomCode: this.currentRoomCode,
+        settings: {
+          themeId: this.selectTheme.value,
+          customKeyword: isCustom ? this.inputCustomKeyword.value.trim() : '',
+          roundCount: parseInt(this.selectRounds.value, 10) || 8,
+          speakerMode: this.selectSpeakerMode.value || 'host'
+        }
+      });
     });
 
     // 搶答大按鈕 (Stage 1 / 2)
@@ -426,8 +485,11 @@ class CampfireSongApp {
       this.socket.emit('next_round', { roomCode: this.currentRoomCode });
     });
 
-    // 再玩一局按鈕
+    // 再玩一局按鈕 (房主與參與者皆可點擊返回大廳重開)
     this.btnPlayAgain.addEventListener('click', () => {
+      this.audio.initContext();
+      this.audio.stop();
+      if (this.modalLiveScoreboard) this.modalLiveScoreboard.style.display = 'none';
       this.socket.emit('restart_game', { roomCode: this.currentRoomCode });
     });
 
@@ -521,6 +583,7 @@ class CampfireSongApp {
       if (this.qrInviteBanner) this.qrInviteBanner.style.display = 'block';
       if (this.qrInviteRoomCode) this.qrInviteRoomCode.innerText = roomParam;
       if (this.btnQuickJoinRoom) this.btnQuickJoinRoom.style.display = 'flex';
+      if (this.btnSwitchOtherRoom) this.btnSwitchOtherRoom.style.display = 'flex';
       if (this.normalHomeActions) this.normalHomeActions.style.display = 'none';
       setTimeout(() => this.inputPlayerName?.focus(), 100);
     }
@@ -559,12 +622,18 @@ class CampfireSongApp {
 
     // 依房間狀態切換主畫面
     if (state.status === 'LOBBY') {
+      this.lastPlayedStageKey = null;
+      this.audio.stop();
+      if (this.modalLiveScoreboard) this.modalLiveScoreboard.style.display = 'none';
       this.showView('lobby');
       this.renderLobbyState();
     } else if (state.status === 'PLAYING') {
       this.showView('game');
       this.renderGameState();
     } else if (state.status === 'GAME_OVER') {
+      this.lastPlayedStageKey = null;
+      this.audio.stop();
+      if (this.modalLiveScoreboard) this.modalLiveScoreboard.style.display = 'none';
       this.showView('gameover');
       this.renderGameOverState();
     }
@@ -573,6 +642,10 @@ class CampfireSongApp {
   renderLobbyState() {
     const state = this.roomState;
     this.lobbyPlayerCount.innerText = `${state.players.length} 位玩家已就緒`;
+
+    if (this.selectSpeakerMode && state.settings?.speakerMode) {
+      this.selectSpeakerMode.value = state.settings.speakerMode;
+    }
 
     // 渲染玩家清單
     this.lobbyPlayersList.innerHTML = state.players.map(p => `
@@ -610,7 +683,15 @@ class CampfireSongApp {
     }
 
     // 判斷是否需要由本機播放音訊 (房主手機接喇叭 或 全員發聲)
-    const shouldPlayAudio = (this.roomState.settings.speakerMode === 'all') || (this.isHost);
+    const shouldPlayAudio = (this.roomState.settings?.speakerMode === 'all') || (this.isHost);
+    if (this.btnManualPlayAudio) {
+      this.btnManualPlayAudio.style.display = shouldPlayAudio ? 'inline-flex' : 'none';
+    }
+
+    // 避免同一階段因多次狀態廣播而重複觸發音訊播放並互相中斷
+    const stageKey = `${round.roundIndex}_${round.stage}`;
+    const isNewStage = (this.lastPlayedStageKey !== stageKey);
+    this.lastPlayedStageKey = stageKey;
 
     // 處理各個階段
     this.panelBuzzer.style.display = 'none';
@@ -651,7 +732,7 @@ class CampfireSongApp {
       this.panelBuzzer.style.display = 'flex';
       this.btnBuzzer.classList.remove('disabled');
 
-      if (shouldPlayAudio && round.audioUrl) {
+      if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
         this.audio.playSnippet(round.audioUrl, 1.2, () => {
           this.vinylDisc.classList.remove('spinning');
@@ -662,13 +743,17 @@ class CampfireSongApp {
       this.panelBuzzer.style.display = 'flex';
       this.btnBuzzer.classList.remove('disabled');
 
-      if (shouldPlayAudio && round.audioUrl) {
+      if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
         this.audio.playSnippet(round.audioUrl, 3.5, () => {
           this.vinylDisc.classList.remove('spinning');
         });
       }
     } else if (round.stage === 'BUZZER_LOCKED') {
+      if (isNewStage) {
+        this.audio.stop();
+        this.vinylDisc.classList.remove('spinning');
+      }
       this.stageStatusTitle.innerText = '🚨 搶鈴成功！正在驗證答案...';
       const isMe = round.buzzerWinner?.id === this.myPlayerId;
       if (isMe) {
@@ -679,10 +764,12 @@ class CampfireSongApp {
       }
     } else if (round.stage === 'STAGE_3') {
       this.stageStatusTitle.innerText = 'STAGE 3：全體四選一競速 (+100~150分)';
+      if (isNewStage) {
+        this.renderStage3Choices(round.choices);
+      }
       this.panelStage3Choices.style.display = 'block';
-      this.renderStage3Choices(round.choices);
 
-      if (shouldPlayAudio && round.audioUrl) {
+      if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
         this.audio.playFull(round.audioUrl);
       }
@@ -697,7 +784,7 @@ class CampfireSongApp {
       }
 
       // 揭曉時播放副歌
-      if (shouldPlayAudio && round.audioUrl) {
+      if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.audio.playFull(round.audioUrl);
       }
 
@@ -781,7 +868,7 @@ class CampfireSongApp {
     this.choices4Container.innerHTML = choices.map((c, idx) => `
       <button class="choice-card-4 choice-color-${idx % 4}" data-id="${c.id}">
         <span class="choice-shape-icon">${icons[idx % 4]}</span>
-        <span>${c.title} - ${c.artist}</span>
+        <span>🎵 ${c.title}</span>
       </button>
     `).join('');
 
