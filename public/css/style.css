@@ -1,0 +1,649 @@
+/* =====================================================
+   🏕️ 露營盲盒猜歌王 (Campfire Blind Song Quiz) 樣式表
+   ===================================================== */
+
+:root {
+  --bg-primary: #0a0d18;
+  --bg-secondary: #13192c;
+  --bg-card: rgba(26, 34, 58, 0.75);
+  --bg-card-border: rgba(255, 140, 40, 0.25);
+  
+  --fire-orange: #ff7a18;
+  --fire-gold: #ffaa33;
+  --fire-glow: rgba(255, 122, 24, 0.4);
+  
+  --accent-cyan: #38bdf8;
+  --accent-green: #34d399;
+  --accent-red: #f87171;
+  --accent-purple: #c084fc;
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  position: relative;
+  background-image: 
+    radial-gradient(circle at 50% 100%, rgba(255, 107, 0, 0.15) 0%, transparent 60%),
+    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(192, 132, 252, 0.08) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+/* 背景星空微粒 */
+.stars-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(1.5px 1.5px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+              radial-gradient(1px 1px at 80px 120px, #ffffff, rgba(0,0,0,0)),
+              radial-gradient(1.5px 1.5px at 160px 70px, #ffaa33, rgba(0,0,0,0)),
+              radial-gradient(2px 2px at 240px 190px, #38bdf8, rgba(0,0,0,0)),
+              radial-gradient(1px 1px at 320px 40px, #ffffff, rgba(0,0,0,0)),
+              radial-gradient(1.5px 1.5px at 400px 160px, #ffffff, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 450px 300px;
+  opacity: 0.65;
+  z-index: 0;
+}
+
+/* 導覽列與頂部 */
+.app-header {
+  position: relative;
+  z-index: 10;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 13, 24, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.camp-icon {
+  font-size: 26px;
+  filter: drop-shadow(0 0 10px var(--fire-orange));
+  animation: flicker 3s infinite alternate;
+}
+
+.app-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #fff 0%, var(--fire-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.room-badge {
+  background: rgba(255, 122, 24, 0.15);
+  border: 1px solid var(--fire-orange);
+  color: var(--fire-gold);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 主容器 */
+.app-container {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 通用玻璃卡片 */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  margin-bottom: 20px;
+}
+
+/* 首頁選項 */
+.welcome-hero {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.hero-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--fire-orange) 0%, #e05300 100%);
+  color: #fff;
+  border: none;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px var(--fire-glow);
+  transition: transform 0.15s ease, filter 0.15s ease;
+  touch-action: manipulation;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+  filter: brightness(1.15);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.btn-secondary:active {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.98);
+}
+
+.input-field {
+  width: 100%;
+  background: rgba(15, 21, 37, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--fire-orange);
+  box-shadow: 0 0 12px var(--fire-glow);
+}
+
+/* QR Code 區域 */
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #121629;
+  border: 1.5px dashed var(--fire-orange);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  margin: 16px 0;
+}
+
+.qr-image {
+  width: 190px;
+  height: 190px;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+.qr-tip {
+  color: var(--fire-gold);
+  font-size: 13px;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+/* 玩家列表膠囊 */
+.player-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.player-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-chip.is-host {
+  border-color: var(--fire-gold);
+  background: rgba(255, 170, 51, 0.15);
+  color: var(--fire-gold);
+  font-weight: 700;
+}
+
+/* 盲盒黑膠播放器 */
+.vinyl-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0 20px;
+}
+
+.vinyl-disc {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2b2b2b 0%, #111111 40%, #000000 70%, #1a1a1a 100%);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--fire-glow);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #2d2d2d;
+  transition: transform 0.5s ease;
+}
+
+.vinyl-disc.spinning {
+  animation: spin 3s linear infinite;
+}
+
+.vinyl-center {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--fire-orange), #b93c00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  position: relative;
+}
+
+.vinyl-hole {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0a0d18;
+  position: absolute;
+  z-index: 2;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.vinyl-mystery-icon {
+  font-size: 26px;
+  z-index: 1;
+}
+
+.revealed-artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.track-reveal-banner {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.track-reveal-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.track-reveal-artist {
+  font-size: 15px;
+  color: var(--fire-gold);
+  margin-top: 4px;
+}
+
+.track-submitter-badge {
+  display: inline-block;
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-top: 8px;
+}
+
+/* 階段與倒數狀態條 */
+.stage-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stage-tag {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: var(--accent-cyan);
+}
+
+.timer-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fire-orange), var(--fire-gold));
+  width: 100%;
+  transition: width 0.1s linear;
+}
+
+/* 巨型按鈴搶答按鈕 (Stage 1 / Stage 2) */
+.buzzer-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.big-buzzer-btn {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8c2b 0%, #d84500 70%, #992900 100%);
+  border: 6px solid #ffaa33;
+  box-shadow: 0 10px 30px rgba(255, 122, 24, 0.5), inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.08s ease, filter 0.08s ease;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.big-buzzer-btn:active {
+  transform: scale(0.92);
+  filter: brightness(1.25);
+  box-shadow: 0 4px 15px rgba(255, 122, 24, 0.7);
+}
+
+.big-buzzer-btn.disabled {
+  background: #334155;
+  border-color: #475569;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.buzzer-subtext {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* 搶答後驗證面板 (語音麥克風 + 8選1) */
+.verification-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mic-action-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+  border: 3px solid #fff;
+  color: #fff;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+  cursor: pointer;
+  animation: pulse-glow 1.5s infinite;
+}
+
+.mic-action-btn.listening {
+  background: linear-gradient(135deg, var(--accent-red), #b91c1c);
+  animation: pulse-glow-red 0.8s infinite;
+}
+
+.voice-transcript-text {
+  min-height: 38px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-sm);
+  color: var(--accent-cyan);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+}
+
+.fast-choices-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.choice-btn-fast {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 12px 10px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.choice-btn-fast:active {
+  background: var(--fire-orange);
+  border-color: var(--fire-gold);
+  transform: scale(0.96);
+}
+
+/* Stage 3 四選一按鈕卡片 (Kahoot Style) */
+.choices-4-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .choices-4-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.choice-card-4 {
+  padding: 18px 16px;
+  border-radius: var(--radius-md);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.choice-card-4:active {
+  transform: scale(0.97);
+  filter: brightness(1.2);
+}
+
+.choice-color-0 { background: linear-gradient(135deg, #ef4444, #b91c1c); } /* 紅 */
+.choice-color-1 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); } /* 藍 */
+.choice-color-2 { background: linear-gradient(135deg, #eab308, #ca8a04); } /* 黃 */
+.choice-color-3 { background: linear-gradient(135deg, #10b981, #047857); } /* 綠 */
+
+.choice-shape-icon {
+  font-size: 20px;
+}
+
+/* 排行榜與得獎台 */
+.scoreboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+}
+
+.score-row.rank-1 {
+  background: rgba(255, 170, 51, 0.15);
+  border: 1px solid var(--fire-gold);
+}
+
+.score-points {
+  font-weight: 800;
+  color: var(--fire-gold);
+}
+
+/* 投稿搜尋清單 */
+.search-results-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* 動畫設定 */
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes flicker {
+  0% { filter: drop-shadow(0 0 6px var(--fire-orange)); }
+  100% { filter: drop-shadow(0 0 16px var(--fire-gold)); }
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+  70% { box-shadow: 0 0 0 16px rgba(56, 189, 248, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+}
+
+@keyframes pulse-glow-red {
+  0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.8); }
+  70% { box-shadow: 0 0 0 18px rgba(248, 113, 113, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
+}

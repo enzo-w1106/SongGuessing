@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🏕️ 營火盲盒猜歌王 - 房主也能玩的露營猜歌派對</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏕️</text></svg>">
+</head>
+<body>
+  <!-- 背景星空 -->
+  <div class="stars-bg"></div>
+
+  <!-- 頂部導航 -->
+  <header class="app-header">
+    <div class="logo-container">
+      <span class="camp-icon">🔥</span>
+      <h1 class="app-title">營火盲盒猜歌王</h1>
+    </div>
+    <div id="header-room-badge" class="room-badge" style="display: none;">
+      <span>房號</span>
+      <strong id="badge-room-code">----</strong>
+    </div>
+  </header>
+
+  <!-- 主畫面容器 -->
+  <main class="app-container">
+
+    <!-- 1. 首頁畫面 (VIEW: HOME) -->
+    <section id="view-home" class="view-section">
+      <div class="glass-card welcome-hero">
+        <div style="font-size: 52px; margin-bottom: 8px;">🏕️🎶</div>
+        <h2>露營盲盒猜歌派對</h2>
+        <p class="hero-subtitle">
+          專為露營聚會設計！題庫自動混洗盲抽<br>
+          <strong>出題者自己完全不劇透，所有人都能參賽！</strong>
+        </p>
+      </div>
+
+      <div class="glass-card">
+        <div class="action-buttons-group">
+          <input type="text" id="input-player-name" class="input-field" placeholder="請輸入你的暱稱 (如：阿強、吉他手)" maxlength="12">
+          
+          <button id="btn-create-room" class="btn-primary">
+            <span>⛺ 建立新房間 (當房主)</span>
+          </button>
+
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="input-join-code" class="input-field" placeholder="輸入 4 碼房號" maxlength="4" style="text-transform: uppercase; text-align: center; font-weight: bold; letter-spacing: 2px;">
+            <button id="btn-join-room" class="btn-secondary" style="white-space: nowrap; padding: 14px 22px;">
+              <span>加入</span>
+            </button>
+          </div>
+
+          <div style="text-align: center; margin: 10px 0; color: var(--text-dim); font-size: 13px;">── 或 ──</div>
+
+          <button id="btn-solo-mode" class="btn-secondary">
+            <span>📱 單機傳遞輪流玩 (單支手機接喇叭)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 等候大廳畫面 (VIEW: LOBBY) -->
+    <section id="view-lobby" class="view-section" style="display: none;">
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-size: 20px;">⛺ 露營等候大廳</h2>
+          <span id="lobby-player-count" style="font-size: 13px; color: var(--fire-gold);">1 位玩家已就緒</span>
+        </div>
+
+        <!-- QR Code 掃描分享 -->
+        <div class="qr-container">
+          <img id="lobby-qr-img" class="qr-image" alt="QR Code">
+          <div class="qr-tip">📱 請朋友掃描上方 QR Code 加入房間</div>
+          <div id="lobby-join-url" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; word-break: break-all;"></div>
+        </div>
+
+        <!-- 房主專屬設定區 -->
+        <div id="host-settings-panel" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 10px;">
+          <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--fire-gold);">⚙️ 遊戲模式與題庫設定</h3>
+
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 13px; color: var(--text-muted);">選擇遊戲形式：</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button id="mode-opt-theme" class="btn-primary" style="flex: 1; padding: 10px; font-size: 14px;">🔥 主題隨機盲抽</button>
+              <button id="mode-opt-submission" class="btn-secondary" style="flex: 1; padding: 10px; font-size: 14px;">🤫 朋友私下投稿</button>
+            </div>
+          </div>
+
+          <div id="theme-selector-group" style="margin-bottom: 12px;">
+            <label style="font-size: 13px; color: var(--text-muted);">盲唱歌單主題：</label>
+            <select id="select-theme" class="input-field" style="margin-top: 6px;"></select>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+            <div style="flex: 1;">
+              <label style="font-size: 13px; color: var(--text-muted);">比賽題數：</label>
+              <select id="select-rounds" class="input-field" style="margin-top: 6px;">
+                <option value="5">5 題 (微醺小品)</option>
+                <option value="8" selected>8 題 (標準派對)</option>
+                <option value="12">12 題 (暢快大戰)</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 13px; color: var(--text-muted);">放音喇叭設定：</label>
+              <select id="select-speaker-mode" class="input-field" style="margin-top: 6px;">
+                <option value="host">由房主手機放歌 (接喇叭)</option>
+                <option value="all">各自手機皆同步發聲</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 私下投稿按鈕 (投稿模式時顯示) -->
+        <div id="submission-trigger-panel" style="display: none; margin: 14px 0;">
+          <button id="btn-open-submission-modal" class="btn-primary" style="background: linear-gradient(135deg, #0284c7, #38bdf8); width: 100%;">
+            <span>🤫 點我私下搜尋並投稿歌曲 (<span id="my-submission-count">0</span>/5)</span>
+          </button>
+          <div style="font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 6px;">
+            每個人私下選的歌會由系統完全打亂混洗，播到時才揭曉是誰投的！
+          </div>
+        </div>
+
+        <!-- 玩家列表 -->
+        <div style="margin-top: 14px;">
+          <label style="font-size: 13px; color: var(--text-muted);">已加入的露營夥伴：</label>
+          <div id="lobby-players-list" class="player-chips-grid"></div>
+        </div>
+
+        <!-- 開始遊戲按鈕 -->
+        <div style="margin-top: 24px;">
+          <button id="btn-start-game" class="btn-primary" style="width: 100%; display: none;">
+            <span>🚀 人到齊了，開始猜歌！</span>
+          </button>
+          <div id="waiting-host-notice" style="text-align: center; color: var(--text-muted); font-size: 14px; padding: 10px 0;">
+            ⏳ 等待房主設定並開始遊戲...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 遊戲進行畫面 (VIEW: GAME) -->
+    <section id="view-game" class="view-section" style="display: none;">
+      <!-- 頂部資訊列 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span id="game-round-indicator" style="font-weight: 800; color: var(--fire-gold); font-size: 15px;">第 1 / 8 題</span>
+        <span id="game-my-score" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 14px;">我的得分: 0</span>
+      </div>
+
+      <!-- 盲盒黑膠唱盤播放器 -->
+      <div class="glass-card vinyl-container">
+        <div id="vinyl-disc" class="vinyl-disc">
+          <div class="vinyl-hole"></div>
+          <div id="vinyl-center" class="vinyl-center">
+            <span id="vinyl-mystery-icon" class="vinyl-mystery-icon">❓</span>
+            <img id="vinyl-revealed-img" class="revealed-artwork" style="display: none;" alt="Album Cover">
+          </div>
+        </div>
+
+        <!-- 揭曉時顯示的歌名與歌手 -->
+        <div class="track-reveal-banner">
+          <div id="track-title" class="track-reveal-title">盲盒黑膠播放中...</div>
+          <div id="track-artist" class="track-reveal-artist">前奏線索流洩中，手速要快！</div>
+          <div id="track-submitter-tag" class="track-submitter-badge" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- 階段狀態與倒數進度條 -->
+      <div class="stage-indicator">
+        <span id="stage-status-title" class="stage-tag">STAGE 1：前奏 1.2 秒挑戰 (+300分)</span>
+        <span id="stage-timer-text" style="color: var(--fire-gold); font-family: monospace; font-size: 16px;">--:--</span>
+      </div>
+      <div class="timer-bar-container">
+        <div id="timer-bar-fill" class="timer-bar-fill"></div>
+      </div>
+
+      <!-- 動態互動區域 (根據階段切換) -->
+      <div id="interaction-card" class="glass-card">
+        
+        <!-- A. 搶答按鈴區 (Stage 1 / Stage 2) -->
+        <div id="panel-buzzer" class="buzzer-area">
+          <button id="btn-buzzer" class="big-buzzer-btn">
+            <span>🚨 搶答！</span>
+            <span class="buzzer-subtext">先按先得分</span>
+          </button>
+          <div id="buzzer-status-msg" style="margin-top: 14px; font-size: 13px; color: var(--text-muted); text-align: center;">
+            藍牙喇叭播放中，聽出旋律就大力按下去！
+          </div>
+        </div>
+
+        <!-- B. 搶鈴後作答驗證區 (僅按到的人顯示) -->
+        <div id="panel-verification" class="verification-panel" style="display: none;">
+          <div style="font-weight: 800; font-size: 16px; color: var(--accent-cyan); text-align: center;">
+            🎉 你搶到了！請於 10 秒內說出或點選歌名：
+          </div>
+
+          <!-- 語音麥克風按鈕 -->
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <button id="btn-mic-record" class="mic-action-btn">🎤</button>
+            <div id="voice-transcript" class="voice-transcript-text">點擊麥克風大聲說出歌名...</div>
+          </div>
+
+          <!-- 8選1快篩選項 -->
+          <div style="width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: center;">或者直接點選下方候選歌曲：</div>
+            <div id="fast-choices-container" class="fast-choices-grid"></div>
+          </div>
+        </div>
+
+        <!-- C. 其他人看到的搶鈴中畫面 -->
+        <div id="panel-someone-answering" style="display: none; text-align: center; padding: 24px 0;">
+          <div style="font-size: 40px; margin-bottom: 10px;">🤫</div>
+          <div id="answering-player-name" style="font-size: 18px; font-weight: 800; color: var(--fire-gold);">有人搶答了！</div>
+          <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">全場請保持安靜，等待系統驗證...</p>
+        </div>
+
+        <!-- D. Stage 3 全體四選一競速卡片 (Kahoot Style) -->
+        <div id="panel-stage3-choices" style="display: none;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 12px; text-align: center;">
+            🎯 四選一速度搶分！越快選對分數越高：
+          </div>
+          <div id="choices-4-container" class="choices-4-grid"></div>
+        </div>
+
+        <!-- E. 揭曉答案與副歌合唱控制 (REVEAL) -->
+        <div id="panel-reveal-controls" style="display: none; text-align: center;">
+          <div id="reveal-toast-msg" style="font-size: 16px; font-weight: 800; color: var(--fire-gold); margin-bottom: 12px;"></div>
+          
+          <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
+            <button id="btn-replay-chorus" class="btn-secondary" style="font-size: 14px; padding: 10px 16px;">
+              <span>🔁 重播副歌大合唱</span>
+            </button>
+            <button id="btn-next-round" class="btn-primary" style="font-size: 15px; padding: 10px 20px; display: none;">
+              <span>下一題 ➔</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 本題結束即時積分榜 -->
+      <div id="round-scoreboard-card" class="glass-card" style="display: none;">
+        <h3 style="font-size: 15px; color: var(--fire-gold); margin-bottom: 8px;">🏆 本局即時排行</h3>
+        <div id="round-scoreboard-list" class="scoreboard-list"></div>
+      </div>
+    </section>
+
+    <!-- 4. 遊戲結束頒獎台 (VIEW: GAME OVER) -->
+    <section id="view-gameover" class="view-section" style="display: none;">
+      <div class="glass-card" style="text-align: center;">
+        <div style="font-size: 54px; margin-bottom: 8px;">🏆🏕️</div>
+        <h2>營火歌王誕生！</h2>
+        <p style="color: var(--text-muted); font-size: 14px;">感謝各位露營好友的熱情搶唱</p>
+
+        <!-- 最終頒獎台 -->
+        <div id="final-podium-list" class="scoreboard-list" style="margin: 20px 0;"></div>
+
+        <button id="btn-play-again" class="btn-primary" style="width: 100%;">
+          <span>🔄 再玩一局 (換主題或重新投稿)</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 私下投稿彈出視窗 (Modal) -->
+  <div id="modal-submission" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 16px;">
+    <div class="glass-card" style="width: 100%; max-width: 480px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 18px; color: var(--fire-gold);">🤫 私下秘密選歌投稿</h3>
+        <button id="btn-close-submission" style="background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;">✕</button>
+      </div>
+      
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+        搜尋你想考大家的歌（最多 5 首），其他朋友跟房主都不知道你投了什麼！
+      </p>
+
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="input-song-search" class="input-field" placeholder="輸入歌名或歌手 (如: 告五人 披星戴月)">
+        <button id="btn-search-song" class="btn-primary" style="white-space: nowrap; padding: 12px 18px;">搜尋</button>
+      </div>
+
+      <!-- 搜尋結果清單 -->
+      <div id="search-results-container" class="search-results-list"></div>
+
+      <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13px; color: var(--accent-cyan);">我已投稿：<strong id="modal-submitted-count">0</strong> / 5 首</span>
+        <button id="btn-done-submission" class="btn-primary" style="padding: 10px 20px; font-size: 14px;">完成關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.IO 客戶端庫 -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- 主應用模組 -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

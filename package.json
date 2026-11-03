@@ -1,0 +1,26 @@
+{
+  "name": "campfire-song-quiz",
+  "version": "1.0.0",
+  "description": "露營盲盒猜歌派對遊戲 - 製作者可共同參賽的多人手機連線猜歌系統",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test tests/musicService.test.js tests/gameRoomManager.test.js"
+  },
+  "keywords": [
+    "music-quiz",
+    "party-game",
+    "camping",
+    "socketio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.5"
+  }
+}
