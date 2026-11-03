@@ -91,6 +91,10 @@
           <div id="theme-selector-group" style="margin-bottom: 12px;">
             <label style="font-size: 13px; color: var(--text-muted);">盲唱歌單主題：</label>
             <select id="select-theme" class="input-field" style="margin-top: 6px;"></select>
+            <div id="custom-theme-input-group" style="display: none; margin-top: 8px;">
+              <input type="text" id="input-custom-keyword" class="input-field" placeholder="✨ 輸入任意歌手/歌單關鍵字 (如: 林俊傑、迪士尼、告五人、80年代)">
+              <div style="font-size: 11px; color: var(--fire-gold); margin-top: 4px;">系統將從全球千萬首曲庫隨機盲抽！</div>
+            </div>
           </div>
 
           <div style="display: flex; gap: 10px; margin-bottom: 14px;">
@@ -142,106 +146,131 @@
 
     <!-- 3. 遊戲進行畫面 (VIEW: GAME) -->
     <section id="view-game" class="view-section" style="display: none;">
-      <!-- 頂部資訊列 -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span id="game-round-indicator" style="font-weight: 800; color: var(--fire-gold); font-size: 15px;">第 1 / 8 題</span>
-        <span id="game-my-score" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 14px;">我的得分: 0</span>
+      <!-- 手機端頂部即時領先膠囊條 (點擊滑出戰況) -->
+      <div id="mobile-live-bar" class="mobile-live-bar">
+        <div class="mobile-live-info">
+          <span id="mobile-leader-text">👑 領先：--</span>
+          <span id="mobile-my-rank-text" style="color: var(--accent-cyan);">你目前：--</span>
+        </div>
+        <button id="btn-toggle-scoreboard-drawer" class="btn-live-toggle">📊 戰況排行</button>
       </div>
 
-      <!-- 盲盒黑膠唱盤播放器 -->
-      <div class="glass-card vinyl-container">
-        <div id="vinyl-disc" class="vinyl-disc">
-          <div class="vinyl-hole"></div>
-          <div id="vinyl-center" class="vinyl-center">
-            <span id="vinyl-mystery-icon" class="vinyl-mystery-icon">❓</span>
-            <img id="vinyl-revealed-img" class="revealed-artwork" style="display: none;" alt="Album Cover">
+      <div class="game-layout-wrapper">
+        <!-- 左側主遊戲區 -->
+        <div class="game-main-col">
+          <!-- 頂部資訊列 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span id="game-round-indicator" style="font-weight: 800; color: var(--fire-gold); font-size: 15px;">第 1 / 8 題</span>
+            <span id="game-my-score" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 14px;">我的得分: 0</span>
+          </div>
+
+          <!-- 盲盒黑膠唱盤播放器 -->
+          <div class="glass-card vinyl-container">
+            <div id="vinyl-disc" class="vinyl-disc">
+              <div class="vinyl-hole"></div>
+              <div id="vinyl-center" class="vinyl-center">
+                <span id="vinyl-mystery-icon" class="vinyl-mystery-icon">❓</span>
+                <img id="vinyl-revealed-img" class="revealed-artwork" style="display: none;" alt="Album Cover">
+              </div>
+            </div>
+
+            <!-- 揭曉時顯示的歌名與歌手 -->
+            <div class="track-reveal-banner">
+              <div id="track-title" class="track-reveal-title">盲盒黑膠播放中...</div>
+              <div id="track-artist" class="track-reveal-artist">前奏線索流洩中，手速要快！</div>
+              <div id="track-submitter-tag" class="track-submitter-badge" style="display: none;"></div>
+            </div>
+          </div>
+
+          <!-- 階段狀態與倒數進度條 -->
+          <div class="stage-indicator">
+            <span id="stage-status-title" class="stage-tag">STAGE 1：前奏 1.2 秒挑戰 (+300分)</span>
+            <span id="stage-timer-text" style="color: var(--fire-gold); font-family: monospace; font-size: 16px;">--:--</span>
+          </div>
+          <div class="timer-bar-container">
+            <div id="timer-bar-fill" class="timer-bar-fill"></div>
+          </div>
+
+          <!-- 動態互動區域 (根據階段切換) -->
+          <div id="interaction-card" class="glass-card">
+            
+            <!-- A. 搶答按鈴區 (Stage 1 / Stage 2) -->
+            <div id="panel-buzzer" class="buzzer-area">
+              <button id="btn-buzzer" class="big-buzzer-btn">
+                <span>🚨 搶答！</span>
+                <span class="buzzer-subtext">先按先得分</span>
+              </button>
+              <div id="buzzer-status-msg" style="margin-top: 14px; font-size: 13px; color: var(--text-muted); text-align: center;">
+                藍牙喇叭播放中，聽出旋律就大力按下去！
+              </div>
+            </div>
+
+            <!-- B. 搶鈴後作答驗證區 (僅按到的人顯示) -->
+            <div id="panel-verification" class="verification-panel" style="display: none;">
+              <div style="font-weight: 800; font-size: 16px; color: var(--accent-cyan); text-align: center;">
+                🎉 你搶到了！請於 10 秒內說出或點選歌名：
+              </div>
+
+              <!-- 語音麥克風按鈕 -->
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <button id="btn-mic-record" class="mic-action-btn">🎤</button>
+                <div id="voice-transcript" class="voice-transcript-text">點擊麥克風大聲說出歌名...</div>
+              </div>
+
+              <!-- 8選1快篩選項 -->
+              <div style="width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: center;">或者直接點選下方候選歌曲：</div>
+                <div id="fast-choices-container" class="fast-choices-grid"></div>
+              </div>
+            </div>
+
+            <!-- C. 其他人看到的搶鈴中畫面 -->
+            <div id="panel-someone-answering" style="display: none; text-align: center; padding: 24px 0;">
+              <div style="font-size: 40px; margin-bottom: 10px;">🤫</div>
+              <div id="answering-player-name" style="font-size: 18px; font-weight: 800; color: var(--fire-gold);">有人搶答了！</div>
+              <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">全場請保持安靜，等待系統驗證...</p>
+            </div>
+
+            <!-- D. Stage 3 全體四選一競速卡片 (Kahoot Style) -->
+            <div id="panel-stage3-choices" style="display: none;">
+              <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 12px; text-align: center;">
+                🎯 四選一速度搶分！越快選對分數越高：
+              </div>
+              <div id="choices-4-container" class="choices-4-grid"></div>
+            </div>
+
+            <!-- E. 揭曉答案與副歌合唱控制 (REVEAL) -->
+            <div id="panel-reveal-controls" style="display: none; text-align: center;">
+              <div id="reveal-toast-msg" style="font-size: 16px; font-weight: 800; color: var(--fire-gold); margin-bottom: 12px;"></div>
+              
+              <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
+                <button id="btn-replay-chorus" class="btn-secondary" style="font-size: 14px; padding: 10px 16px;">
+                  <span>🔁 重播副歌大合唱</span>
+                </button>
+                <button id="btn-next-round" class="btn-primary" style="font-size: 15px; padding: 10px 20px; display: none;">
+                  <span>下一題 ➔</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- 揭曉時顯示的歌名與歌手 -->
-        <div class="track-reveal-banner">
-          <div id="track-title" class="track-reveal-title">盲盒黑膠播放中...</div>
-          <div id="track-artist" class="track-reveal-artist">前奏線索流洩中，手速要快！</div>
-          <div id="track-submitter-tag" class="track-submitter-badge" style="display: none;"></div>
-        </div>
+        <!-- 右側側邊欄：即時分數排行榜 (大螢幕/平板常駐) -->
+        <aside class="game-sidebar-col">
+          <div class="glass-card sidebar-scoreboard-card">
+            <div class="sidebar-scoreboard-header">
+              <span style="font-weight: 800; font-size: 16px; color: var(--fire-gold);">🔥 即時戰況英雄榜</span>
+              <span class="live-pulse-badge">LIVE</span>
+            </div>
+            <div id="sidebar-live-scoreboard-list" class="scoreboard-list" style="margin-top: 10px;"></div>
+          </div>
+        </aside>
       </div>
 
-      <!-- 階段狀態與倒數進度條 -->
-      <div class="stage-indicator">
-        <span id="stage-status-title" class="stage-tag">STAGE 1：前奏 1.2 秒挑戰 (+300分)</span>
-        <span id="stage-timer-text" style="color: var(--fire-gold); font-family: monospace; font-size: 16px;">--:--</span>
-      </div>
-      <div class="timer-bar-container">
-        <div id="timer-bar-fill" class="timer-bar-fill"></div>
-      </div>
-
-      <!-- 動態互動區域 (根據階段切換) -->
-      <div id="interaction-card" class="glass-card">
-        
-        <!-- A. 搶答按鈴區 (Stage 1 / Stage 2) -->
-        <div id="panel-buzzer" class="buzzer-area">
-          <button id="btn-buzzer" class="big-buzzer-btn">
-            <span>🚨 搶答！</span>
-            <span class="buzzer-subtext">先按先得分</span>
-          </button>
-          <div id="buzzer-status-msg" style="margin-top: 14px; font-size: 13px; color: var(--text-muted); text-align: center;">
-            藍牙喇叭播放中，聽出旋律就大力按下去！
-          </div>
-        </div>
-
-        <!-- B. 搶鈴後作答驗證區 (僅按到的人顯示) -->
-        <div id="panel-verification" class="verification-panel" style="display: none;">
-          <div style="font-weight: 800; font-size: 16px; color: var(--accent-cyan); text-align: center;">
-            🎉 你搶到了！請於 10 秒內說出或點選歌名：
-          </div>
-
-          <!-- 語音麥克風按鈕 -->
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <button id="btn-mic-record" class="mic-action-btn">🎤</button>
-            <div id="voice-transcript" class="voice-transcript-text">點擊麥克風大聲說出歌名...</div>
-          </div>
-
-          <!-- 8選1快篩選項 -->
-          <div style="width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: center;">或者直接點選下方候選歌曲：</div>
-            <div id="fast-choices-container" class="fast-choices-grid"></div>
-          </div>
-        </div>
-
-        <!-- C. 其他人看到的搶鈴中畫面 -->
-        <div id="panel-someone-answering" style="display: none; text-align: center; padding: 24px 0;">
-          <div style="font-size: 40px; margin-bottom: 10px;">🤫</div>
-          <div id="answering-player-name" style="font-size: 18px; font-weight: 800; color: var(--fire-gold);">有人搶答了！</div>
-          <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">全場請保持安靜，等待系統驗證...</p>
-        </div>
-
-        <!-- D. Stage 3 全體四選一競速卡片 (Kahoot Style) -->
-        <div id="panel-stage3-choices" style="display: none;">
-          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 12px; text-align: center;">
-            🎯 四選一速度搶分！越快選對分數越高：
-          </div>
-          <div id="choices-4-container" class="choices-4-grid"></div>
-        </div>
-
-        <!-- E. 揭曉答案與副歌合唱控制 (REVEAL) -->
-        <div id="panel-reveal-controls" style="display: none; text-align: center;">
-          <div id="reveal-toast-msg" style="font-size: 16px; font-weight: 800; color: var(--fire-gold); margin-bottom: 12px;"></div>
-          
-          <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
-            <button id="btn-replay-chorus" class="btn-secondary" style="font-size: 14px; padding: 10px 16px;">
-              <span>🔁 重播副歌大合唱</span>
-            </button>
-            <button id="btn-next-round" class="btn-primary" style="font-size: 15px; padding: 10px 20px; display: none;">
-              <span>下一題 ➔</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- 本題結束即時積分榜 -->
-      <div id="round-scoreboard-card" class="glass-card" style="display: none;">
-        <h3 style="font-size: 15px; color: var(--fire-gold); margin-bottom: 8px;">🏆 本局即時排行</h3>
+      <!-- 本題結束時的下方積分榜 (揭曉時輔助顯示) -->
+      <div id="round-scoreboard-card" class="glass-card" style="display: none; margin-top: 14px;">
+        <h3 style="font-size: 15px; color: var(--fire-gold); margin-bottom: 8px;">🏆 本局總分排行</h3>
         <div id="round-scoreboard-list" class="scoreboard-list"></div>
       </div>
     </section>
@@ -263,6 +292,17 @@
     </section>
 
   </main>
+
+  <!-- 手機版戰況抽屜彈窗 (Modal) -->
+  <div id="modal-live-scoreboard" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 16px;">
+    <div class="glass-card" style="width: 100%; max-width: 440px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 18px; color: var(--fire-gold);">🔥 即時戰況英雄榜</h3>
+        <button id="btn-close-scoreboard-drawer" style="background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;">✕</button>
+      </div>
+      <div id="modal-live-scoreboard-list" class="scoreboard-list" style="overflow-y: auto; max-height: 65vh;"></div>
+    </div>
+  </div>
 
   <!-- 私下投稿彈出視窗 (Modal) -->
   <div id="modal-submission" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 16px;">

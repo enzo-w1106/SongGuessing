@@ -250,7 +250,7 @@ export class GameRoomManager {
       }
     } else {
       // 主題隨機盲抽模式
-      trackPool = await fetchThemeTracks(room.settings.themeId, room.settings.roundCount || 8);
+      trackPool = await fetchThemeTracks(room.settings.themeId, room.settings.roundCount || 8, room.settings.customKeyword);
     }
 
     // 隨機混洗題庫，確保房主完全無法預測曲目順序
@@ -421,6 +421,7 @@ export class GameRoomManager {
         playerId: socketId,
         playerName: player.name,
         pointsAwarded: points,
+        scoreboard: Array.from(room.players.values()).sort((a, b) => b.score - a.score),
         message: `🎉 ${player.name} 搶答成功！獲得 +${points} 分！`
       });
 
@@ -436,6 +437,7 @@ export class GameRoomManager {
         playerId: socketId,
         playerName: player.name,
         penalty: penalty,
+        scoreboard: Array.from(room.players.values()).sort((a, b) => b.score - a.score),
         message: `❌ ${player.name} 答錯扣 ${penalty} 分！正解繼續保密中...`
       });
 
@@ -493,6 +495,17 @@ export class GameRoomManager {
       choiceId,
       isCorrect,
       points
+    });
+
+    // 即時廣播目前即時排行榜與玩家作答狀態
+    this.io.to(roomCode).emit('live_scoreboard_update', {
+      scoreboard: Array.from(room.players.values()).sort((a, b) => b.score - a.score),
+      lastEvent: {
+        playerId: socketId,
+        playerName: player ? player.name : '',
+        points: isCorrect ? points : 0,
+        isCorrect
+      }
     });
 
     // 檢查是否所有未鎖定的玩家都已作答完畢

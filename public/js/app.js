@@ -71,6 +71,17 @@ class CampfireSongApp {
     this.mySubmissionCountSpan = document.getElementById('my-submission-count');
     this.btnStartGame = document.getElementById('btn-start-game');
     this.waitingHostNotice = document.getElementById('waiting-host-notice');
+    this.customThemeInputGroup = document.getElementById('custom-theme-input-group');
+    this.inputCustomKeyword = document.getElementById('input-custom-keyword');
+
+    // 即時戰況英雄榜與手機膠囊
+    this.sidebarLiveScoreboardList = document.getElementById('sidebar-live-scoreboard-list');
+    this.modalLiveScoreboard = document.getElementById('modal-live-scoreboard');
+    this.modalLiveScoreboardList = document.getElementById('modal-live-scoreboard-list');
+    this.mobileLeaderText = document.getElementById('mobile-leader-text');
+    this.mobileMyRankText = document.getElementById('mobile-my-rank-text');
+    this.btnToggleScoreboardDrawer = document.getElementById('btn-toggle-scoreboard-drawer');
+    this.btnCloseScoreboardDrawer = document.getElementById('btn-close-scoreboard-drawer');
 
     // 遊戲畫面元素
     this.gameRoundIndicator = document.getElementById('game-round-indicator');
@@ -183,13 +194,23 @@ class CampfireSongApp {
     });
 
     // 搶答判定結果通知
-    this.socket.on('buzzer_result', ({ success, playerName, message }) => {
+    this.socket.on('buzzer_result', ({ success, playerName, message, scoreboard }) => {
       if (success) {
         this.audio.playCorrectSfx();
       } else {
         this.audio.playWrongSfx();
       }
       this.revealToastMsg.innerText = message;
+      if (scoreboard) {
+        this.updateLiveScoreboards(scoreboard);
+      }
+    });
+
+    // 即時排行榜跳動通知 (Stage 3 或答題變動)
+    this.socket.on('live_scoreboard_update', ({ scoreboard }) => {
+      if (scoreboard) {
+        this.updateLiveScoreboards(scoreboard);
+      }
     });
 
     // 揭曉答案
@@ -257,8 +278,32 @@ class CampfireSongApp {
     });
 
     this.selectTheme.addEventListener('change', () => {
-      this.updateRoomSettings({ themeId: this.selectTheme.value });
+      const isCustom = (this.selectTheme.value === 'custom');
+      this.customThemeInputGroup.style.display = isCustom ? 'block' : 'none';
+      this.updateRoomSettings({
+        themeId: this.selectTheme.value,
+        customKeyword: isCustom ? this.inputCustomKeyword.value.trim() : ''
+      });
     });
+
+    this.inputCustomKeyword.addEventListener('input', () => {
+      this.updateRoomSettings({
+        themeId: 'custom',
+        customKeyword: this.inputCustomKeyword.value.trim()
+      });
+    });
+
+    // 手機版戰況抽屜開關
+    if (this.btnToggleScoreboardDrawer) {
+      this.btnToggleScoreboardDrawer.addEventListener('click', () => {
+        this.modalLiveScoreboard.style.display = 'flex';
+      });
+    }
+    if (this.btnCloseScoreboardDrawer) {
+      this.btnCloseScoreboardDrawer.addEventListener('click', () => {
+        this.modalLiveScoreboard.style.display = 'none';
+      });
+    }
 
     this.selectRounds.addEventListener('change', () => {
       this.updateRoomSettings({ roundCount: parseInt(this.selectRounds.value, 10) });
@@ -347,9 +392,48 @@ class CampfireSongApp {
     try {
       const res = await fetch('/api/music/themes');
       const themes = await res.json();
-      this.selectTheme.innerHTML = themes.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      const options = themes.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      this.selectTheme.innerHTML = options + `<option value="custom">✨ 自訂任意歌手 / 主題關鍵字</option>`;
     } catch (e) {
       console.warn('讀取主題失敗:', e);
+    }
+  }
+
+  updateLiveScoreboards(scoreboard) {
+    if (!scoreboard || !Array.isArray(scoreboard)) return;
+    const sorted = [...scoreboard].sort((a, b) => b.score - a.score);
+
+    const html = sorted.map((p, idx) => `
+      <div class="score-row ${idx === 0 ? 'rank-1' : ''}" style="margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-weight: 800; font-size: 15px;">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`}</span>
+          <span style="font-weight: 600;">${p.name} ${p.id === this.myPlayerId ? '<strong style="color:var(--accent-cyan);">(你)</strong>' : ''}</span>
+        </div>
+        <span class="score-points">${p.score} 分</span>
+      </div>
+    `).join('');
+
+    if (this.sidebarLiveScoreboardList) {
+      this.sidebarLiveScoreboardList.innerHTML = html;
+    }
+    if (this.modalLiveScoreboardList) {
+      this.modalLiveScoreboardList.innerHTML = html;
+    }
+
+    if (sorted.length > 0) {
+      const leader = sorted[0];
+      if (this.mobileLeaderText) {
+        this.mobileLeaderText.innerText = `👑 領先: ${leader.name} (${leader.score}分)`;
+      }
+      const myRankIdx = sorted.findIndex(p => p.id === this.myPlayerId);
+      if (myRankIdx !== -1) {
+        if (this.mobileMyRankText) {
+          this.mobileMyRankText.innerText = `你第 ${myRankIdx + 1} 名 (${sorted[myRankIdx].score}分)`;
+        }
+        if (this.gameMyScore) {
+          this.gameMyScore.innerText = `我的得分: ${sorted[myRankIdx].score}`;
+        }
+      }
     }
   }
 
@@ -375,6 +459,10 @@ class CampfireSongApp {
   onRoomStateUpdate(state) {
     this.roomState = state;
     this.isHost = (state.hostId === this.myPlayerId);
+
+    if (state.players) {
+      this.updateLiveScoreboards(state.players);
+    }
 
     // 依房間狀態切換主畫面
     if (state.status === 'LOBBY') {

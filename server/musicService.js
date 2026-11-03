@@ -63,6 +63,56 @@ export const THEMES = [
       'Adele Rolling in the Deep', 'Coldplay Viva La Vida', 'Justin Bieber Baby', 'The Weeknd Blinding Lights',
       'Dua Lipa Levitating', 'Avicii Wake Me Up', 'Queen Bohemian Rhapsody', 'Michael Jackson Beat It'
     ]
+  },
+  {
+    id: 'tiktok_viral',
+    name: '📱 抖音與社群洗腦神曲',
+    description: '烏梅子醬、愛如火、大眠、可不可以、孤勇者等全網刷屏神曲',
+    keywords: [
+      '李榮浩 烏梅子醬', '陳雪凝 綠色', '王心凌 大眠', '張遠 嘉賓', '陳奕迅 孤勇者',
+      '井朧 丟了你', '張碧晨 光的方向', '告白氣球', '等什麼君 踏山河', '阿冗 與我無關',
+      '任然 飛鳥和蟬', '夢然 少年', '程響 四季予你', '王赫野 大風吹', '白月光與硃砂痣'
+    ]
+  },
+  {
+    id: 'taiwanese_classics',
+    name: '🍻 經典台語熱炒與KTV',
+    description: '伍佰、江蕙、滅火器、蕭煌奇、茄子蛋微醺大合唱',
+    keywords: [
+      '伍佰 挪威的森林', '江蕙 家後', '滅火器 島嶼天光', '茄子蛋 浪子回頭', '蕭煌奇 你是我的眼',
+      '茄子蛋 愛情你比我想的閣較偉大', '伍佰 愛情限時批', '黃乙玲 愛到才知痛', '滅火器 長途夜車', '五月天 志明與春嬌',
+      '謝金燕 練舞功', '陳雷 歡喜就好', '葉啟田 愛拚才會贏', '林強 向前走', '董事長樂團 眾神護臺灣'
+    ]
+  },
+  {
+    id: 'kpop_fever',
+    name: '💃 K-POP 韓流潮流神曲',
+    description: 'BLACKPINK、NewJeans、BTS、TWICE、IVE 刀群舞熱門曲',
+    keywords: [
+      'BLACKPINK DDU-DU DDU-DU', 'NewJeans Hype Boy', 'BTS Dynamite', 'TWICE TT', 'IVE LOVE DIVE',
+      'LE SSERAFIM ANTIFRAGILE', 'BLACKPINK Pink Venom', 'NewJeans Super Shy', 'Super Junior Sorry Sorry', 'BIGBANG BANG BANG BANG',
+      'EXO Growl', 'aespa Next Level', 'Girls Generation Gee', 'PSY Gangnam Style', 'BTS Butter'
+    ]
+  },
+  {
+    id: 'ost_classics',
+    name: '🎬 經典影視原聲帶 OST',
+    description: '海角七號、想見你、那些年、當男人戀愛時等催淚名曲',
+    keywords: [
+      '八三夭 想見你想見你想見你', '胡夏 那些年', '田馥甄 小幸運', '范逸臣 國境之南', '韋禮安 如果可以',
+      '郁可唯 指望', '周杰倫 不能說的秘密', '告五人 在這座城市失去你', '盧廣仲 刻在我心底的名字', '張惠妹 人質',
+      '林宥嘉 兜圈', '楊宗緯 洋蔥', '動力火車 當', '庾澄慶 情非得已'
+    ]
+  },
+  {
+    id: 'hiphop_rap',
+    name: '🎤 華語嘻哈與潮流饒舌',
+    description: '頑童MJ116、MC HotDog、高爾宣、瘦子、蛋堡炸翻營地',
+    keywords: [
+      '頑童MJ116 幹大事', 'MC HotDog 差不多先生', '高爾宣 Without You', '瘦子 CHANGE', '蛋堡 關於小熊',
+      '熊仔 買榜', '頑童MJ116 辣台妹', '玖壹壹 9453', '高爾宣 So Good', 'MC HotDog 我愛台妹',
+      '頑童MJ116 生童', '潮州土狗 50元的檳榔', '夜貓組 20:29', '熱狗 髒藝術家'
+    ]
   }
 ];
 
@@ -123,12 +173,20 @@ export async function searchSongs(term, limit = 15) {
 }
 
 /**
- * 根據主題 ID 盲抽隨機題目
- * @param {string} themeId 主題識別碼
+ * 根據主題 ID 盲抽隨機題目（支援自訂關鍵字輸入）
+ * @param {string} themeId 主題識別碼 ('custom' 代表自訂主題)
  * @param {number} count 抽取的題數
+ * @param {string} customKeyword 自訂主題或歌手關鍵字
  * @returns {Promise<Array>} 隨機打亂的題目陣列
  */
-export async function fetchThemeTracks(themeId, count = 10) {
+export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') {
+  if (themeId === 'custom' && customKeyword && customKeyword.trim()) {
+    const customResults = await searchSongs(customKeyword.trim(), Math.max(count + 6, 20));
+    if (customResults && customResults.length > 0) {
+      return customResults.sort(() => Math.random() - 0.5).slice(0, count);
+    }
+  }
+
   const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
   const shuffledKeywords = [...theme.keywords].sort(() => Math.random() - 0.5);
   const selectedKeywords = shuffledKeywords.slice(0, Math.min(count + 5, theme.keywords.length));

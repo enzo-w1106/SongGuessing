@@ -123,12 +123,98 @@ body {
   position: relative;
   z-index: 5;
   flex: 1;
-  max-width: 640px;
+  max-width: 960px;
   width: 100%;
   margin: 0 auto;
-  padding: 20px 16px 40px;
+  padding: 16px 16px 40px;
   display: flex;
   flex-direction: column;
+}
+
+/* 雙欄響應式佈局 (左邊遊戲、右邊即時排行榜) */
+.game-layout-wrapper {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.game-main-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-sidebar-col {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 80px;
+}
+
+.sidebar-scoreboard-card {
+  padding: 18px 16px;
+  border: 1px solid rgba(255, 170, 51, 0.35);
+  box-shadow: 0 8px 30px rgba(255, 122, 24, 0.15);
+}
+
+.sidebar-scoreboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.live-pulse-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  animation: pulse-glow-red 1.2s infinite;
+}
+
+/* 手機版頂部戰況膠囊 */
+.mobile-live-bar {
+  display: none;
+  background: rgba(19, 25, 44, 0.9);
+  border: 1px solid var(--fire-orange);
+  border-radius: 24px;
+  padding: 8px 16px;
+  margin-bottom: 14px;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(10px);
+}
+
+.mobile-live-info {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.btn-live-toggle {
+  background: var(--fire-orange);
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 螢幕小於 820px 時切換為手機佈局 */
+@media (max-width: 820px) {
+  .game-sidebar-col {
+    display: none;
+  }
+  .mobile-live-bar {
+    display: flex;
+  }
 }
 
 /* 通用玻璃卡片 */

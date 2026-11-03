@@ -34,18 +34,38 @@ app.use(express.static(path.join(__dirname, '../public')));
 const roomManager = new GameRoomManager(io);
 
 /**
- * 取得本機區網 IPv4 位址
+ * 智慧取得本機真實區網 Wi-Fi / 乙太網路 IPv4 位址（自動過濾虛擬機與無效網卡）
  */
 function getLocalNetworkIp() {
   const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
+  const candidates = [];
+
+  for (const [name, addrs] of Object.entries(interfaces)) {
+    const lowerName = name.toLowerCase();
+    // 排除虛擬網卡 (VirtualBox, VMware, WSL, Hyper-V, Loopback 等)
+    if (lowerName.includes('virtual') || lowerName.includes('vbox') || lowerName.includes('vmware') || lowerName.includes('wsl') || lowerName.includes('pseudo')) {
+      continue;
+    }
+
+    for (const iface of addrs) {
       if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
+        // 排除 VirtualBox host-only 預設網段 (192.168.56.x) 與 Windows 自動指派 APIPA (169.254.x.x)
+        if (iface.address.startsWith('192.168.56.') || iface.address.startsWith('169.254.')) {
+          continue;
+        }
+
+        const isWifi = lowerName.includes('wi-fi') || lowerName.includes('wlan') || lowerName.includes('wireless') || lowerName.includes('無線');
+        candidates.push({
+          name,
+          address: iface.address,
+          priority: isWifi ? 10 : 5
+        });
       }
     }
   }
-  return 'localhost';
+
+  candidates.sort((a, b) => b.priority - a.priority);
+  return candidates.length > 0 ? candidates[0].address : 'localhost';
 }
 
 /**
