@@ -79,7 +79,10 @@ app.get('/api/network-info', async (req, res) => {
   // 若是以 localhost 造訪，提供區網 IP 作為手機連線網址；若已部署在雲端/公網則使用該 host
   const targetHost = isLocalhost ? `${localIp}:${PORT}` : host;
   const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-  const joinUrl = `${protocol}://${targetHost}`;
+  const roomCode = (req.query.room || '').trim().toUpperCase();
+  const joinUrl = roomCode
+    ? `${protocol}://${targetHost}/?room=${encodeURIComponent(roomCode)}`
+    : `${protocol}://${targetHost}`;
 
   try {
     const qrCodeDataUrl = await QRCode.toDataURL(joinUrl, {
@@ -177,9 +180,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 按鈴玩家提交答案驗證 (文字模糊比對 或 8選1)
+  // 按鈴玩家打字時即時查詢聯想候選歌曲
+  socket.on('search_buzzer_suggestions', ({ roomCode, query }) => {
+    const suggestions = roomManager.getBuzzerSuggestions(roomCode, query);
+    socket.emit('buzzer_suggestions_result', { query, suggestions });
+  });
+
+  // 按鈴玩家提交答案驗證 (打字送出、點選聯想詞或語音文字)
   socket.on('submit_buzzer_answer', ({ roomCode, answer }) => {
     roomManager.verifyBuzzerAnswer(roomCode, socket.id, answer);
+  });
+
+  // 重播副歌大合唱 (統一交由主控台播放，避免個別手機各自放音)
+  socket.on('replay_chorus', ({ roomCode }) => {
+    const room = roomManager.rooms.get(roomCode);
+    if (room && room.currentTrack) {
+      if (room.settings.speakerMode === 'all') {
+        io.to(roomCode).emit('host_replay_chorus', {
+          audioUrl: room.currentTrack.audioUrl
+        });
+      } else {
+        io.to(room.hostId).emit('host_replay_chorus', {
+          audioUrl: room.currentTrack.audioUrl
+        });
+      }
+    }
   });
 
   // 提交 Stage 3 四選一答案

@@ -26,6 +26,7 @@ class CampfireSongApp {
     this.initSocket();
     this.bindEvents();
     this.loadThemes();
+    this.checkUrlRoomInvite();
     this.loadNetworkInfo();
   }
 
@@ -43,7 +44,11 @@ class CampfireSongApp {
     this.badgeRoomCode = document.getElementById('badge-room-code');
     this.headerRoomBadge = document.getElementById('header-room-badge');
 
-    // 首頁輸入
+    // 首頁輸入與 QR 邀請元素
+    this.qrInviteBanner = document.getElementById('qr-invite-banner');
+    this.qrInviteRoomCode = document.getElementById('qr-invite-room-code');
+    this.btnQuickJoinRoom = document.getElementById('btn-quick-join-room');
+    this.normalHomeActions = document.getElementById('normal-home-actions');
     this.inputPlayerName = document.getElementById('input-player-name');
     this.inputJoinCode = document.getElementById('input-join-code');
     this.btnCreateRoom = document.getElementById('btn-create-room');
@@ -101,6 +106,8 @@ class CampfireSongApp {
     this.btnBuzzer = document.getElementById('btn-buzzer');
     this.buzzerStatusMsg = document.getElementById('buzzer-status-msg');
     this.panelVerification = document.getElementById('panel-verification');
+    this.inputBuzzerAnswer = document.getElementById('input-buzzer-answer');
+    this.btnSubmitBuzzerText = document.getElementById('btn-submit-buzzer-text');
     this.btnMicRecord = document.getElementById('btn-mic-record');
     this.voiceTranscript = document.getElementById('voice-transcript');
     this.fastChoicesContainer = document.getElementById('fast-choices-container');
@@ -110,6 +117,7 @@ class CampfireSongApp {
     this.choices4Container = document.getElementById('choices-4-container');
     this.panelRevealControls = document.getElementById('panel-reveal-controls');
     this.revealToastMsg = document.getElementById('reveal-toast-msg');
+    this.guestRevealHint = document.getElementById('guest-reveal-hint');
     this.btnReplayChorus = document.getElementById('btn-replay-chorus');
     this.btnNextRound = document.getElementById('btn-next-round');
     this.roundScoreboardCard = document.getElementById('round-scoreboard-card');
@@ -139,9 +147,16 @@ class CampfireSongApp {
   initSpeechMatcher() {
     this.speechMatcher = new SpeechMatcher(
       (transcript, isFinal) => {
-        this.voiceTranscript.innerText = transcript || '辨識中...';
+        if (this.inputBuzzerAnswer && transcript) {
+          this.inputBuzzerAnswer.value = transcript;
+          this.socket.emit('search_buzzer_suggestions', {
+            roomCode: this.currentRoomCode,
+            query: transcript
+          });
+        }
+        this.voiceTranscript.innerText = `🎤 辨識到：「${transcript}」`;
         if (isFinal && transcript && this.currentRoomCode) {
-          // 提交文字比對
+          // 語音辨識完成後也可直接送出或點選下方聯想詞
           this.socket.emit('submit_buzzer_answer', {
             roomCode: this.currentRoomCode,
             answer: transcript
@@ -150,7 +165,7 @@ class CampfireSongApp {
       },
       (error) => {
         this.btnMicRecord.classList.remove('listening');
-        this.voiceTranscript.innerText = '語音未辨識成功，請點選下方按鈕作答！';
+        this.voiceTranscript.innerText = '💡 請直接在上方輸入框打字（輸入 1 個字即跳出相關歌曲）！';
       }
     );
   }
@@ -187,10 +202,22 @@ class CampfireSongApp {
       this.onRoomStateUpdate(state);
     });
 
-    // 搶鈴成功者作答提示
-    this.socket.on('buzzer_prompt_answer', ({ timeMs, fastChoices }) => {
+    // 搶鈴成功者作答提示 (開啟打字輸入與即時聯想)
+    this.socket.on('buzzer_prompt_answer', ({ timeMs }) => {
       this.audio.playBuzzerSfx();
-      this.renderVerificationPanel(fastChoices);
+      this.prepareVerificationInput();
+    });
+
+    // 接收打字即時聯想候選清單
+    this.socket.on('buzzer_suggestions_result', ({ query, suggestions }) => {
+      this.renderAutocompleteSuggestions(suggestions);
+    });
+
+    // 主控台統一重播副歌大合唱
+    this.socket.on('host_replay_chorus', ({ audioUrl }) => {
+      if (audioUrl) {
+        this.audio.playFull(audioUrl);
+      }
     });
 
     // 搶答判定結果通知
@@ -236,6 +263,27 @@ class CampfireSongApp {
   }
 
   bindEvents() {
+    // 掃描 QR Code 後的一鍵加入房間按鈕
+    if (this.btnQuickJoinRoom) {
+      this.btnQuickJoinRoom.addEventListener('click', () => {
+        this.audio.initContext();
+        const name = this.inputPlayerName.value.trim();
+        if (!name) {
+          this.inputPlayerName.focus();
+          return alert('請先輸入你的暱稱喔！');
+        }
+        const code = this.inputJoinCode.value.trim().toUpperCase();
+        this.savePlayerName(name);
+        this.socket.emit('join_room', { roomCode: code, playerName: name });
+      });
+    }
+
+    this.inputPlayerName.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && this.urlRoomCode) {
+        this.btnQuickJoinRoom.click();
+      }
+    });
+
     // 建立房間
     this.btnCreateRoom.addEventListener('click', () => {
       this.audio.initContext();
@@ -325,6 +373,33 @@ class CampfireSongApp {
       this.socket.emit('buzz_in', { roomCode: this.currentRoomCode });
     });
 
+    // 第一、二階段搶答：打字即時聯想與送出
+    if (this.inputBuzzerAnswer) {
+      this.inputBuzzerAnswer.addEventListener('input', () => {
+        const q = this.inputBuzzerAnswer.value.trim();
+        if (!q) {
+          this.fastChoicesContainer.innerHTML = '';
+          return;
+        }
+        this.socket.emit('search_buzzer_suggestions', {
+          roomCode: this.currentRoomCode,
+          query: q
+        });
+      });
+
+      this.inputBuzzerAnswer.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.submitTypedBuzzerAnswer();
+        }
+      });
+    }
+
+    if (this.btnSubmitBuzzerText) {
+      this.btnSubmitBuzzerText.addEventListener('click', () => {
+        this.submitTypedBuzzerAnswer();
+      });
+    }
+
     // 語音辨識錄音按鈕
     this.btnMicRecord.addEventListener('click', () => {
       if (this.speechMatcher.isListening) {
@@ -334,15 +409,15 @@ class CampfireSongApp {
         const started = this.speechMatcher.start();
         if (started) {
           this.btnMicRecord.classList.add('listening');
-          this.voiceTranscript.innerText = '正在聆聽中... 大聲喊出歌名！';
+          this.voiceTranscript.innerText = '🎤 正在聆聽中... 大聲說出歌名或歌手！';
         }
       }
     });
 
-    // 重新播放副歌
+    // 重新播放副歌 (統一通知主控台播放)
     this.btnReplayChorus.addEventListener('click', () => {
-      if (this.roomState?.currentRound?.audioUrl) {
-        this.audio.playFull(this.roomState.currentRound.audioUrl);
+      if (this.currentRoomCode) {
+        this.socket.emit('replay_chorus', { roomCode: this.currentRoomCode });
       }
     });
 
@@ -437,9 +512,26 @@ class CampfireSongApp {
     }
   }
 
-  async loadNetworkInfo() {
+  checkUrlRoomInvite() {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = (params.get('room') || '').trim().toUpperCase();
+    if (roomParam && roomParam.length === 4) {
+      this.urlRoomCode = roomParam;
+      this.inputJoinCode.value = roomParam;
+      if (this.qrInviteBanner) this.qrInviteBanner.style.display = 'block';
+      if (this.qrInviteRoomCode) this.qrInviteRoomCode.innerText = roomParam;
+      if (this.btnQuickJoinRoom) this.btnQuickJoinRoom.style.display = 'flex';
+      if (this.normalHomeActions) this.normalHomeActions.style.display = 'none';
+      setTimeout(() => this.inputPlayerName?.focus(), 100);
+    }
+  }
+
+  async loadNetworkInfo(roomCode = '') {
     try {
-      const res = await fetch('/api/network-info');
+      const url = roomCode
+        ? `/api/network-info?room=${encodeURIComponent(roomCode)}`
+        : '/api/network-info';
+      const res = await fetch(url);
       const info = await res.json();
       if (info.qrCodeDataUrl) {
         this.lobbyQrImg.src = info.qrCodeDataUrl;
@@ -452,6 +544,7 @@ class CampfireSongApp {
     this.roomState = state;
     this.headerRoomBadge.style.display = 'flex';
     this.badgeRoomCode.innerText = state.code;
+    this.loadNetworkInfo(state.code);
     this.showView('lobby');
     this.renderLobbyState();
   }
@@ -597,7 +690,11 @@ class CampfireSongApp {
       this.stageStatusTitle.innerText = '🎉 正解揭曉！露營大合唱時間';
       this.panelRevealControls.style.display = 'block';
       this.roundScoreboardCard.style.display = 'block';
+      this.btnReplayChorus.style.display = this.isHost ? 'inline-block' : 'none';
       this.btnNextRound.style.display = this.isHost ? 'inline-block' : 'none';
+      if (this.guestRevealHint) {
+        this.guestRevealHint.style.display = this.isHost ? 'none' : 'block';
+      }
 
       // 揭曉時播放副歌
       if (shouldPlayAudio && round.audioUrl) {
@@ -632,19 +729,47 @@ class CampfireSongApp {
     this.timerInterval = setInterval(update, 100);
   }
 
-  renderVerificationPanel(fastChoices) {
-    this.fastChoicesContainer.innerHTML = (fastChoices || []).map(c => `
-      <button class="choice-btn-fast" data-id="${c.id}">
-        ${c.title}
+  prepareVerificationInput() {
+    if (this.inputBuzzerAnswer) {
+      this.inputBuzzerAnswer.value = '';
+      setTimeout(() => this.inputBuzzerAnswer.focus(), 80);
+    }
+    if (this.fastChoicesContainer) {
+      this.fastChoicesContainer.innerHTML = '';
+    }
+    if (this.voiceTranscript) {
+      this.voiceTranscript.innerText = '💡 輸入 1 個字（例如「蔡」）下方就會自動跳出相關歌手＋歌名讓你點選！';
+    }
+  }
+
+  submitTypedBuzzerAnswer() {
+    const val = (this.inputBuzzerAnswer?.value || '').trim();
+    if (!val) return;
+    this.socket.emit('submit_buzzer_answer', {
+      roomCode: this.currentRoomCode,
+      answer: val
+    });
+  }
+
+  renderAutocompleteSuggestions(suggestions) {
+    if (!this.fastChoicesContainer) return;
+    if (!suggestions || suggestions.length === 0) {
+      this.fastChoicesContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--text-dim); padding: 6px;">無相符聯想詞，可直接按「送出」比對你輸入的歌名！</div>';
+      return;
+    }
+
+    this.fastChoicesContainer.innerHTML = suggestions.map(s => `
+      <button class="choice-btn-fast" data-title="${s.title}">
+        🎵 ${s.displayText}
       </button>
     `).join('');
 
     this.fastChoicesContainer.querySelectorAll('.choice-btn-fast').forEach(btn => {
       btn.addEventListener('click', () => {
-        const choiceId = btn.getAttribute('data-id');
+        const songTitle = btn.getAttribute('data-title');
         this.socket.emit('submit_buzzer_answer', {
           roomCode: this.currentRoomCode,
-          answer: choiceId
+          answer: songTitle
         });
       });
     });

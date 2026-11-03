@@ -2,7 +2,7 @@
  * 露營猜歌遊戲 - 多人房間管理與狀態機核心 (Game Room Manager)
  */
 
-import { fetchThemeTracks, generateChoices, fuzzyMatchSongTitle, normalizeSongTitle } from './musicService.js';
+import { fetchThemeTracks, generateChoices, fuzzyMatchSongTitle, normalizeSongTitle, getAutocompleteSuggestions } from './musicService.js';
 
 export class GameRoomManager {
   constructor(io) {
@@ -105,9 +105,7 @@ export class GameRoomManager {
         artworkUrl: isRevealed ? room.currentTrack.artworkUrl : '',
         submitterName: isRevealed ? room.currentTrack.submitterName : null,
         // Stage 3 四選一選項 (只傳選項，不傳正確與否)
-        choices: room.currentChoices || [],
-        // 8選1快篩選項（僅在搶答階段提供）
-        fastChoices: room.currentFastChoices || []
+        choices: room.currentChoices || []
       };
     }
 
@@ -367,26 +365,34 @@ export class GameRoomManager {
     room.previousStage = room.currentStage; // 記錄是在 Stage 1 還是 Stage 2 搶的
     room.currentStage = 'BUZZER_LOCKED';
     
-    // 給予 10 秒作答驗證時間 (語音或 8選1)
-    const answerDuration = 10000;
+    // 給予 12 秒打字/語音作答驗證時間
+    const answerDuration = 12000;
     room.stageDeadline = Date.now() + answerDuration;
 
     this.broadcastRoomState(roomCode);
 
-    // 伺服器通知該特定玩家開啟作答面板
+    // 伺服器通知該特定玩家開啟打字輸入與聯想面板
     this.io.to(socketId).emit('buzzer_prompt_answer', {
-      timeMs: answerDuration,
-      fastChoices: room.currentFastChoices
+      timeMs: answerDuration
     });
 
     room.stageTimer = setTimeout(() => {
-      // 10秒逾時未作答，視同答錯
+      // 12秒逾時未作答，視同答錯
       if (room.currentStage === 'BUZZER_LOCKED' && room.buzzerWinner?.id === socketId) {
         this.verifyBuzzerAnswer(roomCode, socketId, '');
       }
     }, answerDuration);
 
     return { success: true };
+  }
+
+  /**
+   * 取得第一、二階段搶答打字時的即時聯想候選歌曲
+   */
+  getBuzzerSuggestions(roomCode, query) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return [];
+    return getAutocompleteSuggestions(query, room.tracks, room.currentTrack, 8);
   }
 
   /**

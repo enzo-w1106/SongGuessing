@@ -53,3 +53,15 @@ test('fetchThemeTracks 在任何狀況下皆能產出足額題目且打亂', asy
   assert.ok(tracks[0].title);
   assert.ok(tracks[0].audioUrl);
 });
+
+test('getAutocompleteSuggestions 輸入「蔡」應跳出蔡相關人名與歌曲，並包含符合的當前題目', async () => {
+  const { getAutocompleteSuggestions } = await import('../server/musicService.js');
+  const currentTrack = { id: 'curr_1', title: '馬德里不思議', artist: '蔡依林' };
+  const suggestions = getAutocompleteSuggestions('蔡', [], currentTrack, 8);
+
+  assert.ok(suggestions.length > 1);
+  // 每個結果都應該包含「蔡」
+  assert.ok(suggestions.every(s => s.displayText.includes('蔡')));
+  // 當前正確答案有符合「蔡」，必須被包含在候選清單中
+  assert.ok(suggestions.some(s => s.title === '馬德里不思議'));
+});

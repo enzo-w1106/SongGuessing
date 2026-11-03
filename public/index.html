@@ -38,25 +38,39 @@
       </div>
 
       <div class="glass-card">
+        <!-- 掃描 QR Code 進來的專屬快速進房提示 -->
+        <div id="qr-invite-banner" style="display: none; text-align: center; background: rgba(255, 122, 24, 0.15); border: 1.5px solid var(--fire-orange); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+          <div style="font-size: 13px; color: var(--fire-gold); font-weight: 700;">🎉 已自動鎖定露營房間</div>
+          <div id="qr-invite-room-code" style="font-size: 26px; font-weight: 900; letter-spacing: 3px; color: #fff; margin-top: 2px;">----</div>
+        </div>
+
         <div class="action-buttons-group">
           <input type="text" id="input-player-name" class="input-field" placeholder="請輸入你的暱稱 (如：阿強、吉他手)" maxlength="12">
           
-          <button id="btn-create-room" class="btn-primary">
-            <span>⛺ 建立新房間 (當房主)</span>
+          <!-- 掃描 QR Code 後的一鍵加入按鈕 -->
+          <button id="btn-quick-join-room" class="btn-primary" style="display: none;">
+            <span>🚀 立即加入房間</span>
           </button>
 
-          <div style="display: flex; gap: 8px; margin-top: 6px;">
-            <input type="text" id="input-join-code" class="input-field" placeholder="輸入 4 碼房號" maxlength="4" style="text-transform: uppercase; text-align: center; font-weight: bold; letter-spacing: 2px;">
-            <button id="btn-join-room" class="btn-secondary" style="white-space: nowrap; padding: 14px 22px;">
-              <span>加入</span>
+          <!-- 一般首頁按鈕群 -->
+          <div id="normal-home-actions" class="action-buttons-group">
+            <button id="btn-create-room" class="btn-primary">
+              <span>⛺ 建立新房間 (當房主)</span>
+            </button>
+
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <input type="text" id="input-join-code" class="input-field" placeholder="輸入 4 碼房號" maxlength="4" style="text-transform: uppercase; text-align: center; font-weight: bold; letter-spacing: 2px;">
+              <button id="btn-join-room" class="btn-secondary" style="white-space: nowrap; padding: 14px 22px;">
+                <span>加入</span>
+              </button>
+            </div>
+
+            <div style="text-align: center; margin: 10px 0; color: var(--text-dim); font-size: 13px;">── 或 ──</div>
+
+            <button id="btn-solo-mode" class="btn-secondary">
+              <span>📱 單機傳遞輪流玩 (單支手機接喇叭)</span>
             </button>
           </div>
-
-          <div style="text-align: center; margin: 10px 0; color: var(--text-dim); font-size: 13px;">── 或 ──</div>
-
-          <button id="btn-solo-mode" class="btn-secondary">
-            <span>📱 單機傳遞輪流玩 (單支手機接喇叭)</span>
-          </button>
         </div>
       </div>
     </section>
@@ -205,23 +219,25 @@
               </div>
             </div>
 
-            <!-- B. 搶鈴後作答驗證區 (僅按到的人顯示) -->
+            <!-- B. 搶鈴後作答驗證區 (僅按到的人顯示：打字聯想 + 語音輔助) -->
             <div id="panel-verification" class="verification-panel" style="display: none;">
               <div style="font-weight: 800; font-size: 16px; color: var(--accent-cyan); text-align: center;">
-                🎉 你搶到了！請於 10 秒內說出或點選歌名：
+                🎉 你搶到了！請於 12 秒內輸入歌名或歌手關鍵字：
               </div>
 
-              <!-- 語音麥克風按鈕 -->
-              <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                <button id="btn-mic-record" class="mic-action-btn">🎤</button>
-                <div id="voice-transcript" class="voice-transcript-text">點擊麥克風大聲說出歌名...</div>
+              <!-- 關鍵字輸入框 + 送出 + 語音輔助 -->
+              <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
+                <input type="text" id="input-buzzer-answer" class="input-field" placeholder="輸入字詞 (如：蔡、周杰倫、晴天)..." autocomplete="off" style="flex: 1;">
+                <button id="btn-mic-record" class="btn-secondary" title="語音輸入" style="padding: 12px 14px; font-size: 18px;">🎤</button>
+                <button id="btn-submit-buzzer-text" class="btn-primary" style="padding: 13px 16px; font-size: 15px; white-space: nowrap;">送出</button>
               </div>
 
-              <!-- 8選1快篩選項 -->
-              <div style="width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: center;">或者直接點選下方候選歌曲：</div>
-                <div id="fast-choices-container" class="fast-choices-grid"></div>
+              <div id="voice-transcript" style="font-size: 12px; color: var(--text-muted); text-align: center; min-height: 18px;">
+                💡 輸入 1 個字（例如「蔡」）下方就會自動跳出相關歌手＋歌名讓你點選！
               </div>
+
+              <!-- 動態聯想候選清單 (有打字才跳出) -->
+              <div id="fast-choices-container" class="fast-choices-grid" style="width: 100%;"></div>
             </div>
 
             <!-- C. 其他人看到的搶鈴中畫面 -->
@@ -242,10 +258,13 @@
             <!-- E. 揭曉答案與副歌合唱控制 (REVEAL) -->
             <div id="panel-reveal-controls" style="display: none; text-align: center;">
               <div id="reveal-toast-msg" style="font-size: 16px; font-weight: 800; color: var(--fire-gold); margin-bottom: 12px;"></div>
+              <div id="guest-reveal-hint" style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: none;">
+                📻 正由主控台播放副歌大合唱中，等待房主進入下一題...
+              </div>
               
               <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
-                <button id="btn-replay-chorus" class="btn-secondary" style="font-size: 14px; padding: 10px 16px;">
-                  <span>🔁 重播副歌大合唱</span>
+                <button id="btn-replay-chorus" class="btn-secondary" style="font-size: 14px; padding: 10px 16px; display: none;">
+                  <span>🔁 主控台重播大合唱</span>
                 </button>
                 <button id="btn-next-round" class="btn-primary" style="font-size: 15px; padding: 10px 20px; display: none;">
                   <span>下一題 ➔</span>

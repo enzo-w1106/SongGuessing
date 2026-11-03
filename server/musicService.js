@@ -148,7 +148,7 @@ export async function searchSongs(term, limit = 15) {
     }
     const data = await res.json();
     if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-      return data.results
+      const mapped = data.results
         .filter(item => item.previewUrl && item.trackName)
         .map(item => ({
           id: `itunes_${item.trackId}`,
@@ -160,6 +160,8 @@ export async function searchSongs(term, limit = 15) {
           durationMs: item.trackTimeMillis || 30000,
           source: 'itunes'
         }));
+      registerSongsToCatalog(mapped);
+      return mapped;
     }
   } catch (err) {
     // 網路斷線或離線時啟動備援
@@ -332,4 +334,253 @@ export function generateChoices(correctTrack, poolOfTracks, totalChoices = 4) {
     .sort(() => Math.random() - 0.5);
 
   return choices;
+}
+
+// =========================================================
+// 第一、二階段搶答：打字即時聯想詞庫 (Autocomplete Suggestions)
+// =========================================================
+const SUGGESTION_CATALOG = new Map();
+
+const SEED_SONGS = [
+  // 蔡依林 / 蔡健雅 / 蔡旻佑 / 蔡琴 / 蔡秋鳳
+  { title: '倒帶', artist: '蔡依林' },
+  { title: '日不落', artist: '蔡依林' },
+  { title: '說愛你', artist: '蔡依林' },
+  { title: '愛情三十六計', artist: '蔡依林' },
+  { title: '玫瑰少年', artist: '蔡依林' },
+  { title: '舞孃', artist: '蔡依林' },
+  { title: 'Play 我呸', artist: '蔡依林' },
+  { title: '怪美的', artist: '蔡依林' },
+  { title: '布拉格廣場', artist: '蔡依林' },
+  { title: '天空', artist: '蔡依林' },
+  { title: '檸檬草的味道', artist: '蔡依林' },
+  { title: '騎士精神', artist: '蔡依林' },
+  { title: '看我72變', artist: '蔡依林' },
+  { title: '妥協', artist: '蔡依林' },
+  { title: '大藝術家', artist: '蔡依林' },
+  { title: '紅色高跟鞋', artist: '蔡健雅' },
+  { title: '陌生人', artist: '蔡健雅' },
+  { title: '空白格', artist: '蔡健雅' },
+  { title: '達爾文', artist: '蔡健雅' },
+  { title: '無底洞', artist: '蔡健雅' },
+  { title: '拋物線', artist: '蔡健雅' },
+  { title: '別找我麻煩', artist: '蔡健雅' },
+  { title: 'Letting Go', artist: '蔡健雅' },
+  { title: '我可以', artist: '蔡旻佑' },
+  { title: '被遺忘的時光', artist: '蔡琴' },
+  { title: '讀你', artist: '蔡琴' },
+  { title: '恰似你的溫柔', artist: '蔡琴' },
+  { title: '金包銀', artist: '蔡秋鳳' },
+  // 周杰倫 / 周興哲 / 周華健 / 周深 / 周湯豪
+  { title: '晴天', artist: '周杰倫' },
+  { title: '稻香', artist: '周杰倫' },
+  { title: '七里香', artist: '周杰倫' },
+  { title: '簡單愛', artist: '周杰倫' },
+  { title: '安靜', artist: '周杰倫' },
+  { title: '告白氣球', artist: '周杰倫' },
+  { title: '不能說的秘密', artist: '周杰倫' },
+  { title: '夜曲', artist: '周杰倫' },
+  { title: '青花瓷', artist: '周杰倫' },
+  { title: '菊花台', artist: '周杰倫' },
+  { title: '聽媽媽的話', artist: '周杰倫' },
+  { title: '開不了口', artist: '周杰倫' },
+  { title: '愛在西元前', artist: '周杰倫' },
+  { title: '雙截棍', artist: '周杰倫' },
+  { title: '珊瑚海', artist: '周杰倫' },
+  { title: '楓', artist: '周杰倫' },
+  { title: '擱淺', artist: '周杰倫' },
+  { title: '一路向北', artist: '周杰倫' },
+  { title: '最偉大的作品', artist: '周杰倫' },
+  { title: '以後別做朋友', artist: '周興哲' },
+  { title: '你，好不好？', artist: '周興哲' },
+  { title: '怎麼了', artist: '周興哲' },
+  { title: '永不失聯的愛', artist: '周興哲' },
+  { title: '想知道你在想什麼', artist: '周興哲' },
+  { title: '朋友', artist: '周華健' },
+  { title: '花心', artist: '周華健' },
+  { title: '帥到分手', artist: '周湯豪' },
+  { title: '大魚', artist: '周深' },
+  // 五月天 / 伍佰 / 告五人
+  { title: '溫柔', artist: '五月天' },
+  { title: '志明與春嬌', artist: '五月天' },
+  { title: '戀愛ing', artist: '五月天' },
+  { title: '倔強', artist: '五月天' },
+  { title: '突然好想你', artist: '五月天' },
+  { title: '離開地球表面', artist: '五月天' },
+  { title: '傷心的人別聽慢歌', artist: '五月天' },
+  { title: '派對動物', artist: '五月天' },
+  { title: '乾杯', artist: '五月天' },
+  { title: '憨人', artist: '五月天' },
+  { title: '擁抱', artist: '五月天' },
+  { title: '知足', artist: '五月天' },
+  { title: '我不願讓你一個人', artist: '五月天' },
+  { title: '後來的我們', artist: '五月天' },
+  { title: '披星戴月的想你', artist: '告五人' },
+  { title: '愛人錯過', artist: '告五人' },
+  { title: '在這座城市遺失了你', artist: '告五人' },
+  { title: '好不容易', artist: '告五人' },
+  { title: '唯一', artist: '告五人' },
+  { title: '帶我去找夜生活', artist: '告五人' },
+  { title: '挪威的森林', artist: '伍佰' },
+  { title: '愛你一萬年', artist: '伍佰' },
+  { title: '浪人情歌', artist: '伍佰' },
+  { title: 'Last Dance', artist: '伍佰' },
+  { title: '世界第一等', artist: '伍佰' },
+  { title: '愛情限時批', artist: '伍佰 & 萬芳' },
+  // 陳奕迅 / 林俊傑 / 張學友 / 張惠妹 / 孫燕姿 / 梁靜茹 / 王心凌 / 鄧紫棋
+  { title: '十年', artist: '陳奕迅' },
+  { title: '孤勇者', artist: '陳奕迅' },
+  { title: 'K歌之王', artist: '陳奕迅' },
+  { title: '紅玫瑰', artist: '陳奕迅' },
+  { title: '愛情轉移', artist: '陳奕迅' },
+  { title: '浮誇', artist: '陳奕迅' },
+  { title: '好久不見', artist: '陳奕迅' },
+  { title: '淘汰', artist: '陳奕迅' },
+  { title: '讓我留在你身邊', artist: '陳奕迅' },
+  { title: '江南', artist: '林俊傑' },
+  { title: '修煉愛情', artist: '林俊傑' },
+  { title: '她說', artist: '林俊傑' },
+  { title: '小酒窩', artist: '林俊傑 & 蔡卓妍' },
+  { title: '不為誰而作的歌', artist: '林俊傑' },
+  { title: '可惜沒如果', artist: '林俊傑' },
+  { title: '背對背擁抱', artist: '林俊傑' },
+  { title: '吻別', artist: '張學友' },
+  { title: '一千個傷心的理由', artist: '張學友' },
+  { title: '她來聽我的演唱會', artist: '張學友' },
+  { title: '聽海', artist: '張惠妹' },
+  { title: '三天三夜', artist: '張惠妹' },
+  { title: '連名帶姓', artist: '張惠妹' },
+  { title: '人質', artist: '張惠妹' },
+  { title: '記得', artist: '張惠妹' },
+  { title: '掉了', artist: '張惠妹' },
+  { title: '遇見', artist: '孫燕姿' },
+  { title: '天黑黑', artist: '孫燕姿' },
+  { title: '綠光', artist: '孫燕姿' },
+  { title: '我懷念的', artist: '孫燕姿' },
+  { title: '開始懂了', artist: '孫燕姿' },
+  { title: '逆光', artist: '孫燕姿' },
+  { title: '勇氣', artist: '梁靜茹' },
+  { title: '分手快樂', artist: '梁靜茹' },
+  { title: '會呼吸的痛', artist: '梁靜茹' },
+  { title: '慢冷', artist: '梁靜茹' },
+  { title: '可惜不是你', artist: '梁靜茹' },
+  { title: '愛你', artist: '王心凌' },
+  { title: '大眠', artist: '王心凌' },
+  { title: '睫毛彎彎', artist: '王心凌' },
+  { title: '當你', artist: '王心凌' },
+  { title: '光年之外', artist: '鄧紫棋' },
+  { title: '泡沫', artist: '鄧紫棋' },
+  { title: '來自天堂的魔鬼', artist: '鄧紫棋' },
+  // 田馥甄 / S.H.E / 林宥嘉 / 盧廣仲 / 韋禮安 / 李榮浩
+  { title: '小幸運', artist: '田馥甄' },
+  { title: '寂寞寂寞就好', artist: '田馥甄' },
+  { title: '你就不要想起我', artist: '田馥甄' },
+  { title: '熱帶雨林', artist: 'S.H.E' },
+  { title: 'Super Star', artist: 'S.H.E' },
+  { title: '戀人未滿', artist: 'S.H.E' },
+  { title: '中國話', artist: 'S.H.E' },
+  { title: '說謊', artist: '林宥嘉' },
+  { title: '兜圈', artist: '林宥嘉' },
+  { title: '成全', artist: '林宥嘉' },
+  { title: '浪費', artist: '林宥嘉' },
+  { title: '刻在我心底的名字', artist: '盧廣仲' },
+  { title: '魚仔', artist: '盧廣仲' },
+  { title: '幾分之幾', artist: '盧廣仲' },
+  { title: '如果可以', artist: '韋禮安' },
+  { title: '還是會', artist: '韋禮安' },
+  { title: '女孩', artist: '韋禮安' },
+  { title: '烏梅子醬', artist: '李榮浩' },
+  { title: '年少有為', artist: '李榮浩' },
+  { title: '李白', artist: '李榮浩' },
+  { title: '模特', artist: '李榮浩' },
+  { title: '不將就', artist: '李榮浩' }
+];
+
+export function registerSongsToCatalog(songs) {
+  for (const s of songs) {
+    if (s && s.title && s.artist) {
+      const key = `${normalizeSongTitle(s.title)}|${s.artist.toLowerCase().trim()}`;
+      if (!SUGGESTION_CATALOG.has(key)) {
+        SUGGESTION_CATALOG.set(key, {
+          title: s.title,
+          artist: s.artist
+        });
+      }
+    }
+  }
+}
+
+// 初始化預設種子曲庫與所有主題關鍵字
+registerSongsToCatalog(SEED_SONGS);
+registerSongsToCatalog(FALLBACK_TRACKS);
+for (const theme of THEMES) {
+  for (const kw of theme.keywords) {
+    const parts = kw.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      const artist = parts[0];
+      const title = parts.slice(1).join(' ');
+      registerSongsToCatalog([{ title, artist }]);
+    }
+  }
+}
+
+/**
+ * 根據玩家輸入的字詞（如 "蔡"、"周"、"愛"）即時回傳相關「歌名 - 歌手」候選清單
+ * @param {string} query 玩家輸入的關鍵字
+ * @param {Array} roomTracks 當前房間本局題庫
+ * @param {object} currentTrack 當前正在播放的題目
+ * @param {number} limit 最多回傳筆數
+ * @returns {Array<{ title: string, artist: string, displayText: string }>}
+ */
+export function getAutocompleteSuggestions(query, roomTracks = [], currentTrack = null, limit = 8) {
+  const q = (query || '').trim().toLowerCase();
+  if (!q) return [];
+
+  // 確保房間題庫也已註冊進索引
+  if (roomTracks && roomTracks.length > 0) {
+    registerSongsToCatalog(roomTracks);
+  }
+  if (currentTrack) {
+    registerSongsToCatalog([currentTrack]);
+  }
+
+  const matched = [];
+  const seenKeys = new Set();
+
+  const matchesQuery = (song) => {
+    const t = (song.title || '').toLowerCase();
+    const a = (song.artist || '').toLowerCase();
+    return t.includes(q) || a.includes(q);
+  };
+
+  // 1. 若當前正解符合玩家輸入的關鍵字（如輸入歌手「蔡」或歌名其中一字），確保一定納入候選！
+  let currentMatched = null;
+  if (currentTrack && matchesQuery(currentTrack)) {
+    const key = `${normalizeSongTitle(currentTrack.title)}|${(currentTrack.artist || '').toLowerCase().trim()}`;
+    seenKeys.add(key);
+    currentMatched = {
+      title: currentTrack.title,
+      artist: currentTrack.artist,
+      displayText: `${currentTrack.artist} - ${currentTrack.title}`
+    };
+  }
+
+  // 2. 從全域曲庫找出其他同樣符合該關鍵字的歌曲（作為同歌手/同字詞混淆與聯想）
+  for (const [key, song] of SUGGESTION_CATALOG.entries()) {
+    if (seenKeys.has(key)) continue;
+    if (matchesQuery(song)) {
+      seenKeys.add(key);
+      matched.push({
+        title: song.title,
+        artist: song.artist,
+        displayText: `${song.artist} - ${song.title}`
+      });
+    }
+  }
+
+  // 隨機打亂其他符合項目並截取前 limit - 1 筆，再把正解混入其中隨機位置（不固定排第一，防止盲猜第一個）
+  const shuffledOthers = matched.sort(() => Math.random() - 0.5).slice(0, currentMatched ? limit - 1 : limit);
+  const finalResults = currentMatched ? [currentMatched, ...shuffledOthers] : shuffledOthers;
+
+  return finalResults.sort(() => Math.random() - 0.5);
 }
