@@ -1,27 +1,20 @@
 @echo off
-chcp 65001 > nul
-title 🏕️ 露營盲盒猜歌派對
+cd /d "%~dp0"
+title Campfire Song Quiz Server
 
 echo ========================================================
-echo        🏕️  露營盲盒猜歌派對 - 一鍵快速啟動器
-echo        (房主也能一起玩的零劇透多人猜歌遊戲)
+echo   Campfire Song Quiz - Starting Server...
 echo ========================================================
 echo.
 
-node -v >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [錯誤] 系統未偵測到 Node.js 環境，請先前往 https://nodejs.org 安裝。
-    pause
-    exit /b
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :3000 ^| findstr LISTENING') do (
+    taskkill /F /PID %%a >nul 2>&1
 )
 
 if not exist node_modules (
-    echo [提示] 首次啟動正在安裝必要套件，請稍候約 10 秒...
     call npm install
 )
 
-echo [啟動中] 正在啟動猜歌伺服器並開啟瀏覽器...
 start http://localhost:3000
-
 node server/index.js
 pause
