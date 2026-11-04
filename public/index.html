@@ -126,8 +126,8 @@
             <div style="flex: 1;">
               <label style="font-size: 13px; color: var(--text-muted);">放音喇叭設定：</label>
               <select id="select-speaker-mode" class="input-field" style="margin-top: 6px;">
-                <option value="host">由房主手機放歌 (接喇叭)</option>
-                <option value="all">各自手機皆同步發聲</option>
+                <option value="all">各自手機皆同步發聲 (推薦)</option>
+                <option value="host">僅由房主裝置放歌 (接喇叭)</option>
               </select>
             </div>
           </div>
@@ -175,9 +175,12 @@
       <div class="game-layout-wrapper">
         <!-- 左側主遊戲區 -->
         <div class="game-main-col">
-          <!-- 頂部資訊列 -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <span id="game-round-indicator" style="font-weight: 800; color: var(--fire-gold); font-size: 15px;">第 1 / 8 題</span>
+          <!-- 頂部主題與題號資訊列 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span id="game-round-indicator" style="font-weight: 800; color: var(--fire-gold); font-size: 15px;">第 1 / 8 題</span>
+              <span id="game-theme-badge" style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); background: rgba(56, 189, 248, 0.14); border: 1px solid rgba(56, 189, 248, 0.35); padding: 3px 10px; border-radius: 14px;">🎯 主題載入中...</span>
+            </div>
             <span id="game-my-score" style="font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 14px;">我的得分: 0</span>
           </div>
 
@@ -213,6 +216,8 @@
 
           <!-- 動態互動區域 (根據階段切換) -->
           <div id="interaction-card" class="glass-card">
+            <!-- 即時搶答結果快顯條 (3 秒後自動消失) -->
+            <div id="buzzer-feedback-banner" style="display: none; text-align: center; font-weight: 800; font-size: 15px; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.45); color: #fca5a5;"></div>
             
             <!-- A. 搶答按鈴區 (Stage 1 / Stage 2) -->
             <div id="panel-buzzer" class="buzzer-area">

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeSongTitle, fuzzyMatchSongTitle, generateChoices } from '../server/musicService.js';
+import { normalizeSongTitle, fuzzyMatchSongTitle, generateChoices, isNonOriginalTrack, cleanDisplaySongTitle, getThemeDisplayName } from '../server/musicService.js';
 
 test('normalizeSongTitle 應能去除標點、括號、後綴並統一小寫', () => {
   assert.equal(normalizeSongTitle('晴天 (Live 現場版)'), '晴天');
@@ -81,4 +81,13 @@ test('generateChoices 四選一應優先挑選同歌手干擾項，且絕不出�
   assert.ok(!choices.some(c => c.title === '十年'));
   // 因為 SUGGESTION_CATALOG 內有多首周杰倫歌曲，4 個選項都應該是周杰倫的歌
   assert.ok(choices.every(c => c.artist === '周杰倫'));
+});
+
+test('isNonOriginalTrack 應能過濾 Live、演唱會、Remix、翻唱與伴奏版本', () => {
+  assert.equal(isNonOriginalTrack({ trackName: '晴天 (Live)', collectionName: '無與倫比演唱會', artistName: '周杰倫' }), true);
+  assert.equal(isNonOriginalTrack({ trackName: '十年 (DJ Remix版)', collectionName: '電音精選', artistName: '陳奕迅' }), true);
+  assert.equal(isNonOriginalTrack({ trackName: '勇氣 (翻唱版)', collectionName: '網路翻唱', artistName: '路人甲' }), true);
+  assert.equal(isNonOriginalTrack({ trackName: '晴天', collectionName: '葉惠美', artistName: '周杰倫' }), false);
+  assert.equal(cleanDisplaySongTitle('十年 (電影《擺渡人》主題曲)'), '十年');
+  assert.ok(getThemeDisplayName({ mode: 'THEME', themeId: 'jay_chou' }).includes('周杰倫'));
 });

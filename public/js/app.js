@@ -20,6 +20,7 @@ class CampfireSongApp {
     this.mySubmissionsCount = 0;
     this.selectedChoiceId = null;
     this.timerInterval = null;
+    this.buzzerFeedbackTimer = null;
     this.lastPlayedStageKey = null;
 
     this.initElements();
@@ -97,7 +98,9 @@ class CampfireSongApp {
 
     // 遊戲畫面元素
     this.gameRoundIndicator = document.getElementById('game-round-indicator');
+    this.gameThemeBadge = document.getElementById('game-theme-badge');
     this.gameMyScore = document.getElementById('game-my-score');
+    this.buzzerFeedbackBanner = document.getElementById('buzzer-feedback-banner');
     this.vinylDisc = document.getElementById('vinyl-disc');
     this.vinylMysteryIcon = document.getElementById('vinyl-mystery-icon');
     this.vinylRevealedImg = document.getElementById('vinyl-revealed-img');
@@ -232,10 +235,12 @@ class CampfireSongApp {
     this.socket.on('buzzer_result', ({ success, playerName, message, scoreboard }) => {
       if (success) {
         this.audio.playCorrectSfx();
+        this.revealToastMsg.innerText = message;
+        if (this.buzzerFeedbackBanner) this.buzzerFeedbackBanner.style.display = 'none';
       } else {
         this.audio.playWrongSfx();
+        this.showTemporaryBuzzerFeedback(message);
       }
-      this.revealToastMsg.innerText = message;
       if (scoreboard) {
         this.updateLiveScoreboards(scoreboard);
       }
@@ -671,12 +676,30 @@ class CampfireSongApp {
     this.submissionTriggerPanel.style.display = (state.settings.mode === 'SUBMISSION') ? 'block' : 'none';
   }
 
+  showTemporaryBuzzerFeedback(message) {
+    if (!this.buzzerFeedbackBanner) return;
+    if (this.buzzerFeedbackTimer) {
+      clearTimeout(this.buzzerFeedbackTimer);
+    }
+    this.buzzerFeedbackBanner.innerText = message;
+    this.buzzerFeedbackBanner.style.display = 'block';
+    this.buzzerFeedbackTimer = setTimeout(() => {
+      if (this.buzzerFeedbackBanner) {
+        this.buzzerFeedbackBanner.style.display = 'none';
+      }
+    }, 3000);
+  }
+
   renderGameState() {
     const round = this.roomState.currentRound;
     if (!round) return;
 
-    // 更新題號與個人分數
+    // 更新題號、當前主題與個人分數
     this.gameRoundIndicator.innerText = `第 ${round.roundIndex + 1} / ${round.totalRounds} 題`;
+    if (this.gameThemeBadge) {
+      const themeLabel = this.roomState.settings?.themeName || '🔥 90-00 華語金曲';
+      this.gameThemeBadge.innerText = `🎯 主題：${themeLabel}`;
+    }
     const me = this.roomState.players.find(p => p.id === this.myPlayerId);
     if (me) {
       this.gameMyScore.innerText = `我的得分: ${me.score}`;
@@ -692,6 +715,13 @@ class CampfireSongApp {
     const stageKey = `${round.roundIndex}_${round.stage}`;
     const isNewStage = (this.lastPlayedStageKey !== stageKey);
     this.lastPlayedStageKey = stageKey;
+
+    if (round.stage === 'STAGE_1' && isNewStage) {
+      this.revealToastMsg.innerText = '';
+      if (this.buzzerFeedbackBanner) {
+        this.buzzerFeedbackBanner.style.display = 'none';
+      }
+    }
 
     // 處理各個階段
     this.panelBuzzer.style.display = 'none';
@@ -774,6 +804,12 @@ class CampfireSongApp {
         this.audio.playFull(round.audioUrl);
       }
     } else if (round.stage === 'REVEAL') {
+      if (this.buzzerFeedbackBanner) {
+        this.buzzerFeedbackBanner.style.display = 'none';
+      }
+      if (!this.revealToastMsg.innerText) {
+        this.revealToastMsg.innerText = '🎵 正解揭曉！大家一起大合唱吧！';
+      }
       this.stageStatusTitle.innerText = '🎉 正解揭曉！露營大合唱時間';
       this.panelRevealControls.style.display = 'block';
       this.roundScoreboardCard.style.display = 'block';
@@ -847,7 +883,8 @@ class CampfireSongApp {
 
     this.fastChoicesContainer.innerHTML = suggestions.map(s => `
       <button class="choice-btn-fast" data-title="${s.title}">
-        🎵 ${s.displayText}
+        <span style="flex: 1; font-weight: 800; color: #fff;">🎵 ${s.title}</span>
+        <span style="font-size: 13px; font-weight: 600; color: var(--fire-gold); flex-shrink: 0;">${s.artist}</span>
       </button>
     `).join('');
 

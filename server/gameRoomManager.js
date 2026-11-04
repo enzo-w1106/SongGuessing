@@ -2,7 +2,7 @@
  * 露營猜歌遊戲 - 多人房間管理與狀態機核心 (Game Room Manager)
  */
 
-import { fetchThemeTracks, generateChoices, fuzzyMatchSongTitle, normalizeSongTitle, getAutocompleteSuggestions } from './musicService.js';
+import { fetchThemeTracks, generateChoices, fuzzyMatchSongTitle, normalizeSongTitle, getAutocompleteSuggestions, getThemeDisplayName } from './musicService.js';
 
 export class GameRoomManager {
   constructor(io) {
@@ -39,7 +39,7 @@ export class GameRoomManager {
         mode: 'THEME', // 'THEME' (主題盲抽) 或 'SUBMISSION' (私下投稿大亂鬥)
         themeId: 'mandopop_classic',
         roundCount: 8,
-        speakerMode: 'host', // 'host' (房主設備接喇叭播), 'all' (所有人手機同步發聲)
+        speakerMode: 'all', // 預設 'all' (所有人裝置同步發聲), 可切換為 'host' (僅主控台接喇叭播)
       },
       submissions: new Map(), // socketId -> Array of tracks
       tracks: [], // 本局抽取/混洗後的題庫 (包含正解，僅伺服器可見)
@@ -113,7 +113,10 @@ export class GameRoomManager {
       code: room.code,
       hostId: room.hostId,
       status: room.status,
-      settings: room.settings,
+      settings: {
+        ...room.settings,
+        themeName: getThemeDisplayName(room.settings)
+      },
       players: playersList,
       currentRound: currentRoundData
     };

@@ -133,7 +133,52 @@ export const FALLBACK_TRACKS = [
 ];
 
 /**
+ * 判斷是否為非原版錄音室歌曲（過濾 Live 現場版、演唱會、Remix 混音、翻唱 Cover、伴奏 Karaoke、純音樂等）
+ */
+export function isNonOriginalTrack(item) {
+  const title = String(item.trackName || item.title || '');
+  const album = String(item.collectionName || item.album || '');
+  const artist = String(item.artistName || item.artist || '');
+  const combined = `${title} ${album} ${artist}`;
+
+  const nonOriginalRegex = /\b(live|remix|mix|remixed|cover|karaoke|instrumental|tribute|acoustic|demo|dj|bootleg|sped\s*up|slowed|reverb|medley|concert|tour|session|unplugged|version|ver\.)\b|現場|演唱會|音樂會|巡迴|巡演|實況|翻唱|伴奏|純音樂|演奏|鋼琴版|吉他版|小提琴|水晶音樂|胎教|卡拉|混音|電音版|加快|慢搖|抖音|說唱版|串燒|組曲|合唱版|致敬/i;
+
+  return nonOriginalRegex.test(combined);
+}
+
+/**
+ * 清理顯示用歌名（去除括號內的 Live/Remastered/電影主題曲等雜訊，保留純淨歌名）
+ */
+export function cleanDisplaySongTitle(rawTitle) {
+  if (!rawTitle) return '';
+  let t = String(rawTitle)
+    .replace(/\s*\([^)]*(remaster|live|version|ver\.|edit|mix|feat|ft\.|ost|主題曲|片尾曲|插曲|電影|電視劇|劇集|動畫|國語|台語|粵語)[^)]*\)/gi, '')
+    .replace(/\s*（[^）]*(remaster|live|version|ver\.|edit|mix|feat|ft\.|ost|主題曲|片尾曲|插曲|電影|電視劇|劇集|動畫|國語|台語|粵語)[^）]*）/gi, '')
+    .replace(/\s*\[[^\]]*(remaster|live|version|ver\.|edit|mix|feat|ft\.|ost|主題曲|片尾曲|插曲|電影|電視劇|劇集|動畫|國語|台語|粵語)[^\]]*\]/gi, '')
+    .replace(/\s*【[^】]*】/g, '')
+    .replace(/\s*-\s*(remastered|live|single|version|ost).*$/gi, '')
+    .trim();
+  return t || String(rawTitle).trim();
+}
+
+/**
+ * 根據房間設定取得顯示用的主題名稱
+ */
+export function getThemeDisplayName(settings = {}) {
+  if (settings.mode === 'SUBMISSION') {
+    return '🤫 好友私下投稿大亂鬥';
+  }
+  if (settings.themeId === 'custom') {
+    const kw = (settings.customKeyword || '').trim();
+    return kw ? `✨ 自訂主題：${kw}` : '✨ 自訂主題盲抽';
+  }
+  const found = THEMES.find(t => t.id === settings.themeId);
+  return found ? found.name : THEMES[0].name;
+}
+
+/**
  * 透過 Apple iTunes 搜尋 API 取得歌曲與 30 秒試聽音訊 (公開、免金鑰、高音質 AAC)
+ * 自動過濾 Live、Remix、Cover 翻唱與伴奏版本，優先保留原唱錄音室版本
  * @param {string} term 搜尋關鍵字 (歌名或歌手)
  * @param {number} limit 搜尋回傳筆數
  * @returns {Promise<Array>} 格式化後的歌曲物件陣列
@@ -141,25 +186,43 @@ export const FALLBACK_TRACKS = [
 export async function searchSongs(term, limit = 15) {
   try {
     const encodedTerm = encodeURIComponent(term);
-    const url = `https://itunes.apple.com/search?term=${encodedTerm}&entity=song&limit=${limit}&country=TW`;
+    const fetchLimit = Math.min(50, Math.max(limit * 3, 25));
+    const url = `https://itunes.apple.com/search?term=${encodedTerm}&entity=song&limit=${fetchLimit}&country=TW`;
     const res = await fetch(url, { headers: { 'User-Agent': 'CampfireSongQuiz/1.0' } });
     if (!res.ok) {
       throw new Error(`iTunes search error: HTTP ${res.status}`);
     }
     const data = await res.json();
     if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-      const mapped = data.results
-        .filter(item => item.previewUrl && item.trackName)
-        .map(item => ({
+      const validItems = data.results.filter(item => item.previewUrl && item.trackName);
+
+      // 嚴格過濾掉 Live、Remix、翻唱、伴奏等非原唱錄音室版本
+      const studioItems = validItems.filter(item => !isNonOriginalTrack(item));
+      const finalItems = studioItems.length > 0 ? studioItems : validItems;
+
+      const mapped = [];
+      const seenNormKey = new Set();
+
+      for (const item of finalItems) {
+        const cleanTitle = cleanDisplaySongTitle(item.trackName);
+        const normKey = `${normalizeSongTitle(cleanTitle)}__${(item.artistName || '').toLowerCase().trim()}`;
+        if (seenNormKey.has(normKey)) continue;
+        seenNormKey.add(normKey);
+
+        mapped.push({
           id: `itunes_${item.trackId}`,
-          title: item.trackName,
+          title: cleanTitle,
           artist: item.artistName,
           album: item.collectionName || '',
           artworkUrl: (item.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
           audioUrl: item.previewUrl,
           durationMs: item.trackTimeMillis || 30000,
           source: 'itunes'
-        }));
+        });
+
+        if (mapped.length >= limit) break;
+      }
+
       registerSongsToCatalog(mapped);
       return mapped;
     }
@@ -175,7 +238,7 @@ export async function searchSongs(term, limit = 15) {
 }
 
 /**
- * 根據主題 ID 盲抽隨機題目（支援自訂關鍵字輸入）
+ * 根據主題 ID 盲抽隨機題目（支援自訂關鍵字輸入，並確保優先命中原唱歌手）
  * @param {string} themeId 主題識別碼 ('custom' 代表自訂主題)
  * @param {number} count 抽取的題數
  * @param {string} customKeyword 自訂主題或歌手關鍵字
@@ -183,7 +246,7 @@ export async function searchSongs(term, limit = 15) {
  */
 export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') {
   if (themeId === 'custom' && customKeyword && customKeyword.trim()) {
-    const customResults = await searchSongs(customKeyword.trim(), Math.max(count + 6, 20));
+    const customResults = await searchSongs(customKeyword.trim(), Math.max(count + 8, 25));
     if (customResults && customResults.length > 0) {
       return customResults.sort(() => Math.random() - 0.5).slice(0, count);
     }
@@ -191,18 +254,36 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') 
 
   const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
   const shuffledKeywords = [...theme.keywords].sort(() => Math.random() - 0.5);
-  const selectedKeywords = shuffledKeywords.slice(0, Math.min(count + 5, theme.keywords.length));
+  const selectedKeywords = shuffledKeywords.slice(0, Math.min(count + 6, theme.keywords.length));
 
   const allTracks = [];
   const seenIds = new Set();
+  const seenNormTitles = new Set();
 
   for (const kw of selectedKeywords) {
-    const results = await searchSongs(kw, 5);
-    for (const song of results) {
-      if (!seenIds.has(song.id)) {
+    const parts = kw.trim().split(/\s+/);
+    const expectedArtist = parts.length >= 2 ? parts[0].toLowerCase() : '';
+    const expectedTitle = parts.length >= 2 ? normalizeSongTitle(parts.slice(1).join('')) : '';
+
+    const results = await searchSongs(kw, 8);
+    if (!results || results.length === 0) continue;
+
+    // 優先選擇「歌手名稱吻合原唱」且「歌名吻合」的錄音室原曲，杜絕路人翻唱版
+    const sortedCandidates = [...results].sort((a, b) => {
+      const aArtistMatch = expectedArtist && (a.artist || '').toLowerCase().includes(expectedArtist) ? 2 : 0;
+      const bArtistMatch = expectedArtist && (b.artist || '').toLowerCase().includes(expectedArtist) ? 2 : 0;
+      const aTitleMatch = expectedTitle && normalizeSongTitle(a.title) === expectedTitle ? 1 : 0;
+      const bTitleMatch = expectedTitle && normalizeSongTitle(b.title) === expectedTitle ? 1 : 0;
+      return (bArtistMatch + bTitleMatch) - (aArtistMatch + aTitleMatch);
+    });
+
+    for (const song of sortedCandidates) {
+      const normT = normalizeSongTitle(song.title);
+      if (!seenIds.has(song.id) && !seenNormTitles.has(normT)) {
         seenIds.add(song.id);
+        seenNormTitles.add(normT);
         allTracks.push(song);
-        break; // 每個關鍵字取首筆最吻合的作為題目，其餘自動進入 SUGGESTION_CATALOG 作為同歌手干擾項！
+        break;
       }
     }
     if (allTracks.length >= count) break;
@@ -211,8 +292,10 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') 
   // 如果網路不通抓到的歌不足，自動以備援歌庫補足
   if (allTracks.length < count) {
     for (const fb of FALLBACK_TRACKS) {
-      if (!seenIds.has(fb.id)) {
+      const normT = normalizeSongTitle(fb.title);
+      if (!seenIds.has(fb.id) && !seenNormTitles.has(normT)) {
         seenIds.add(fb.id);
+        seenNormTitles.add(normT);
         allTracks.push(fb);
       }
       if (allTracks.length >= count) break;
