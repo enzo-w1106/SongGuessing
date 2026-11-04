@@ -27,6 +27,7 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
@@ -72,13 +73,15 @@ function getLocalNetworkIp() {
  * API: 取得網路連線資訊與 QR Code
  */
 app.get('/api/network-info', async (req, res) => {
-  const host = req.headers.host || `localhost:${PORT}`;
+  const rawHost = req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`;
+  const host = String(rawHost).split(',')[0].trim();
   const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
   const localIp = getLocalNetworkIp();
   
   // 若是以 localhost 造訪，提供區網 IP 作為手機連線網址；若已部署在雲端/公網則使用該 host
   const targetHost = isLocalhost ? `${localIp}:${PORT}` : host;
-  const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
+  const protocol = (req.protocol === 'https' || forwardedProto.includes('https')) ? 'https' : 'http';
   const roomCode = (req.query.room || '').trim().toUpperCase();
   const joinUrl = roomCode
     ? `${protocol}://${targetHost}/?room=${encodeURIComponent(roomCode)}`
