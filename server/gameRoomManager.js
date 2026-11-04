@@ -2,7 +2,7 @@
  * 露營猜歌遊戲 - 多人房間管理與狀態機核心 (Game Room Manager)
  */
 
-import { fetchThemeTracks, generateChoices, fuzzyMatchSongTitle, normalizeSongTitle, getAutocompleteSuggestions, getThemeDisplayName } from './musicService.js';
+import { fetchThemeTracks, generateChoices, fuzzyMatchSongTitle, normalizeSongTitle, getAutocompleteSuggestions, getThemeDisplayName, shuffleArray } from './musicService.js';
 
 export class GameRoomManager {
   constructor(io) {
@@ -43,6 +43,7 @@ export class GameRoomManager {
       },
       submissions: new Map(), // socketId -> Array of tracks
       tracks: [], // 本局抽取/混洗後的題庫 (包含正解，僅伺服器可見)
+      playedNormTitles: new Set(), // 紀錄本房間今晚已玩過的歌曲，避免連玩多場重複出現
       currentRoundIndex: -1,
       currentTrack: null,
       currentStage: null, // 'STAGE_1', 'STAGE_2', 'BUZZER_LOCKED', 'STAGE_3', 'REVEAL'
@@ -250,16 +251,21 @@ export class GameRoomManager {
       }
       // 如果投稿數量太少，自動用主題歌曲補足
       if (trackPool.length < 4) {
-        const themeFiller = await fetchThemeTracks(room.settings.themeId, 10);
+        const themeFiller = await fetchThemeTracks(room.settings.themeId, 10, '', room.playedNormTitles);
         trackPool.push(...themeFiller);
       }
     } else {
-      // 主題隨機盲抽模式
-      trackPool = await fetchThemeTracks(room.settings.themeId, room.settings.roundCount || 8, room.settings.customKeyword);
+      // 主題隨機盲抽模式 (傳入本房間已播過歌曲記憶池，避免連玩幾局一直出重複的歌)
+      trackPool = await fetchThemeTracks(room.settings.themeId, room.settings.roundCount || 8, room.settings.customKeyword, room.playedNormTitles);
     }
 
-    // 隨機混洗題庫，確保房主完全無法預測曲目順序
-    room.tracks = trackPool.sort(() => Math.random() - 0.5);
+    // 使用 Fisher-Yates 真隨機混洗題庫，並將本局抽出的歌寫入房間已玩過歷史記憶
+    room.tracks = shuffleArray(trackPool);
+    for (const t of room.tracks) {
+      if (t && t.title) {
+        room.playedNormTitles.add(normalizeSongTitle(t.title));
+      }
+    }
     room.status = 'PLAYING';
     room.currentRoundIndex = -1;
 

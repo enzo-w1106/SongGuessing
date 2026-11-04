@@ -7,11 +7,20 @@ export const THEMES = [
   {
     id: 'mandopop_classic',
     name: '🔥 90-00 華語金曲 / KTV必點',
-    description: '張學友、陳奕迅、周杰倫、孫燕姿、梁靜茹、王力宏等回憶殺金曲',
+    description: '張學友、陳奕迅、周杰倫、孫燕姿、梁靜茹、王力宏、蔡依林、林俊傑等回憶殺金曲',
     keywords: [
       '張學友 吻別', '陳奕迅 十年', '孫燕姿 遇見', '梁靜茹 勇氣', '五月天 溫柔',
       '王心凌 愛你', '林俊傑 江南', '蔡依林 倒帶', '光良 童話', '張惠妹 聽海',
-      '陶喆 愛很簡單', 'SHE 熱帶雨林', '莫文蔚 陰天', '信樂團 死了都要愛', '范瑋琪 最初的夢想'
+      '陶喆 愛很簡單', 'S.H.E 熱帶雨林', '莫文蔚 陰天', '信樂團 死了都要愛', '范瑋琪 最初的夢想',
+      '周杰倫 晴天', '孫燕姿 天黑黑', '梁靜茹 分手快樂', '陳奕迅 K歌之王', '蔡依林 日不落',
+      '林俊傑 小酒窩', '王力宏 唯一', '張惠妹 原來你什麼都不要', '潘瑋柏 不得不愛', '羅志祥 愛轉角',
+      'F.I.R. Lydia', '游鴻明 下沙', '張宇 雨一直下', '周華健 朋友', '任賢齊 心太軟',
+      '伍佰 浪人情歌', '動力火車 忠孝東路走九遍', '蘇打綠 小情歌', '蕭敬騰 王妃', '林宥嘉 說謊',
+      '張韶涵 隱形的翅膀', '楊丞琳 曖昧', '郭靜 下一個天亮', '戴佩妮 你要的愛', '李聖傑 痴心絕對',
+      '曹格 背叛', '阿杜 他一定很愛你', '庾澄慶 情非得已', '徐若瑄 愛笑的眼睛', '蕭亞軒 最熟悉的陌生人',
+      '周杰倫 七里香', '蔡依林 說愛你', '陳奕迅 愛情轉移', '孫燕姿 我懷念的', '梁靜茹 會呼吸的痛',
+      '王心凌 睫毛彎彎', 'S.H.E Super Star', '五月天 突然好想你', '張棟樑 當你孤單你會想起誰', '品冠 門沒鎖',
+      '陶喆 小鎮姑娘', '王力宏 Kiss Goodbye', '林俊傑 背對背擁抱', '張惠妹 三天三夜', '許茹芸 淚海'
     ]
   },
   {
@@ -21,7 +30,13 @@ export const THEMES = [
     keywords: [
       '周杰倫 晴天', '周杰倫 稻香', '周杰倫 七里香', '周杰倫 簡單愛', '周杰倫 安靜',
       '周杰倫 告白氣球', '周杰倫 不能說的秘密', '周杰倫 夜曲', '周杰倫 青花瓷', '周杰倫 菊花台',
-      '周杰倫 聽媽媽的話', '周杰倫 開不了口', '周杰倫 愛在西元前', '周杰倫 雙截棍', '周杰倫 珊瑚海'
+      '周杰倫 聽媽媽的話', '周杰倫 開不了口', '周杰倫 愛在西元前', '周杰倫 雙截棍', '周杰倫 珊瑚海',
+      '周杰倫 髮如雪', '周杰倫 千里之外', '周杰倫 擱淺', '周杰倫 軌跡', '周杰倫 黑色幽默',
+      '周杰倫 龍捲風', '周杰倫 星晴', '周杰倫 回到過去', '周杰倫 半島鐵盒', '周杰倫 暗號',
+      '周杰倫 東風破', '周杰倫 以父之名', '周杰倫 藉口', '周杰倫 園遊會', '周杰倫 楓',
+      '周杰倫 一路向北', '周杰倫 退後', '周杰倫 彩虹', '周杰倫 最長的電影', '周杰倫 牛仔很忙',
+      '周杰倫 說好的幸福呢', '周杰倫 蘭亭序', '周杰倫 算什麼男人', '周杰倫 等你下課', '周杰倫 說好不哭',
+      '周杰倫 Mojito', '周杰倫 最偉大的作品', '周杰倫 紅塵客棧', '周杰倫 明明就', '周杰倫 蒲公英的約定'
     ]
   },
   {
@@ -31,7 +46,12 @@ export const THEMES = [
     keywords: [
       '五月天 溫柔', '五月天 志明與春嬌', '五月天 戀愛ing', '五月天 倔強', '五月天 突然好想你',
       '五月天 離開地球表面', '五月天 傷心的人別聽慢歌', '五月天 派對動物', '五月天 乾杯', '五月天 憨人',
-      '五月天 擁抱', '五月天 瘋狂世界', '五月天 知足', '五月天 叫我第一名', '五月天 步步'
+      '五月天 擁抱', '五月天 瘋狂世界', '五月天 知足', '五月天 叫我第一名', '五月天 步步',
+      '五月天 我不願讓你一個人', '五月天 星空', '五月天 諾亞方舟', '五月天 後來的我們', '五月天 頑固',
+      '五月天 人生海海', '五月天 終結孤單', '五月天 軋車', '五月天 孫悟空', '五月天 天使',
+      '五月天 私奔到月球', '五月天 你不是真正的快樂', '五月天 如煙', '五月天 笑忘歌', '五月天 入陣曲',
+      '五月天 為愛而生', '五月天 雌雄同體', '五月天 心中無別人', '五月天 垃圾車', '五月天 乾杯',
+      '五月天 轉眼', '五月天 任意門', '五月天 玫瑰少年', '五月天 因為你所以我', '五月天 為你寫下這首情歌'
     ]
   },
   {
@@ -41,17 +61,26 @@ export const THEMES = [
     keywords: [
       '告五人 披星戴月的想你', '草東沒有派對 大風吹', '美秀集團 捲菸', '滅火器 島嶼天光', '落日飛車 My Jinji',
       '告五人 愛人錯過', '茄子蛋 浪子回頭', '老王樂隊 我還年輕', '拍謝少年 暗流', '康士坦的變化球 美好的事可不可以發生在我身上',
-      '血肉果汁機 關閉太陽', 'Deca Joins 浴室', '芒果醬 小紫', '傻子與白痴 象牙舟', '甜約翰 降雨機率'
+      '血肉果汁機 關閉太陽', 'Deca Joins 浴室', '芒果醬 小紫', '傻子與白痴 象牙舟', '甜約翰 降雨機率',
+      '告五人 在這座城市失去你', '告五人 好不容易', '告五人 唯一', '草東沒有派對 山海', '草東沒有派對 爛泥',
+      '茄子蛋 浪流連', '茄子蛋 親愛的無情孫小美', '美秀集團 心悶', '美秀集團 我要你愛', '滅火器 長途夜車',
+      '滅火器 海上的人', '理想混蛋 不是因為天氣晴朗才愛你', '理想混蛋 愚者', '好樂團 他們說我是沒有用的年輕人', '老王樂隊 安九',
+      '脆樂團 編織星空的人', '南西肯恩 練習一個人生活', '溫蒂漫步 讓我住進你心裡', '荷爾蒙少年 4:00A.M.', '宇宙人 藍色的你',
+      '麋先生 嗜愛動物', '怕胖團 魚', '怕胖團 當你在最需要的時候', 'イルカポリス 海豚刑警 安平之光', '庸俗救星 窗簾'
     ]
   },
   {
     id: 'anime_classic',
     name: '✨ 經典動漫與童年神曲',
-    description: '灌籃高手、數碼寶貝、新時代航海王與幽遊白書',
+    description: '灌籃高手、數碼寶貝、新時代航海王與鬼滅咒術',
     keywords: [
       '和田光司 Butter-Fly', 'BAAD 好想大聲說喜歡你', 'WANDS 直到世界的盡頭', '高橋洋子 殘酷天使的行動綱領',
-      'LiSA 紅蓮華', 'Yoasobi 偶像', '米津玄師 Kick Back', 'Eve 迴迴奇譚', 'Aimer 殘響散歌',
-      'KANA-BOON Silhouette', 'FLOW GO!!!', 'UNISON SQUARE GARDEN Sugar Song', 'RADWIMPS 前前前世'
+      'LiSA 紅蓮華', 'YOASOBI Idol', '米津玄師 KICK BACK', 'Eve 廻廻奇譚', 'Aimer 殘響散歌',
+      'KANA-BOON Silhouette', 'FLOW GO!!!', 'UNISON SQUARE GARDEN Sugar Song', 'RADWIMPS 前前前世',
+      'LiSA 炎', 'Official髭男dism Mixed Nuts', 'YOASOBI 勇者', 'Creepy Nuts Bling-Bang-Bang-Born', 'King Gnu SPECIALZ',
+      '大黑摩季 只凝視著你', 'ZARD 轉動命運之輪', '生物股長 Blue Bird', 'Linked Horizon 紅蓮的弓矢', 'TK from 凛として時雨 unravel',
+      '米津玄師 Peace Sign', '羊文學 more than words', 'キタニタツヤ 青のすみか', 'Mrs. GREEN APPLE Inferno', 'Ado 新時代',
+      'MAN WITH A MISSION 絆ノ奇跡', 'SPYAIR サムライハート', '星野源 Comedy', 'Vaundy 裸の勇者', '绿黄色社会 花になって'
     ]
   },
   {
@@ -61,7 +90,13 @@ export const THEMES = [
     keywords: [
       'Bruno Mars Uptown Funk', 'Ed Sheeran Shape of You', 'Maroon 5 Sugar', 'Taylor Swift Shake It Off',
       'Adele Rolling in the Deep', 'Coldplay Viva La Vida', 'Justin Bieber Baby', 'The Weeknd Blinding Lights',
-      'Dua Lipa Levitating', 'Avicii Wake Me Up', 'Queen Bohemian Rhapsody', 'Michael Jackson Beat It'
+      'Dua Lipa Levitating', 'Avicii Wake Me Up', 'Queen Bohemian Rhapsody', 'Michael Jackson Beat It',
+      'Lady Gaga Bad Romance', 'Katy Perry Roar', 'Taylor Swift Love Story', 'Taylor Swift Cruel Summer',
+      'Bruno Mars Just the Way You Are', 'Bruno Mars 24K Magic', 'Maroon 5 Moves Like Jagger', 'Maroon 5 Payphone',
+      'Ed Sheeran Thinking Out Loud', 'Ed Sheeran Perfect', 'The Chainsmokers Closer', 'Alan Walker Faded',
+      'Billie Eilish bad guy', 'Olivia Rodrigo good 4 u', 'Sabrina Carpenter Espresso', 'Harry Styles As It Was',
+      'Justin Bieber Peaches', 'Post Malone Sunflower', 'OneRepublic Counting Stars', 'Imagine Dragons Believer',
+      'Rihanna Diamonds', 'Sia Chandelier', 'Shawn Mendes Senorita', 'Charlie Puth Attention', 'LMFAO Party Rock Anthem'
     ]
   },
   {
@@ -70,8 +105,12 @@ export const THEMES = [
     description: '烏梅子醬、愛如火、大眠、可不可以、孤勇者等全網刷屏神曲',
     keywords: [
       '李榮浩 烏梅子醬', '陳雪凝 綠色', '王心凌 大眠', '張遠 嘉賓', '陳奕迅 孤勇者',
-      '井朧 丟了你', '張碧晨 光的方向', '告白氣球', '等什麼君 踏山河', '阿冗 與我無關',
-      '任然 飛鳥和蟬', '夢然 少年', '程響 四季予你', '王赫野 大風吹', '白月光與硃砂痣'
+      '井朧 丟了你', '張碧晨 光的方向', '周杰倫 告白氣球', '等什麼君 踏山河', '阿冗 與我無關',
+      '任然 飛鳥和蟬', '夢然 少年', '程響 四季予你', '王赫野 大風吹', '大籽 白月光與硃砂痣',
+      '那藝娜 愛如火', '張紫豪 可不可以', '于文文 體面', '岑寧兒 追光者', '買辣椒也用券 起風了',
+      '鄧紫棋 光年之外', '鄧紫棋 泡沫', '薛之謙 演員', '李榮浩 年少有為', '李榮浩 模特',
+      '陳粒 奇妙能力歌', '告五人 愛人錯過', '韋禮安 如果可以', '周興哲 你好不好', '周興哲 以後別做朋友',
+      '陳勢安 天后', '汪蘇瀧 有點甜', '隔壁老樊 我曾', '海來阿木 點歌的人', 'G.E.M.鄧紫棋 來自天堂的魔鬼'
     ]
   },
   {
@@ -81,7 +120,11 @@ export const THEMES = [
     keywords: [
       '伍佰 挪威的森林', '江蕙 家後', '滅火器 島嶼天光', '茄子蛋 浪子回頭', '蕭煌奇 你是我的眼',
       '茄子蛋 愛情你比我想的閣較偉大', '伍佰 愛情限時批', '黃乙玲 愛到才知痛', '滅火器 長途夜車', '五月天 志明與春嬌',
-      '謝金燕 練舞功', '陳雷 歡喜就好', '葉啟田 愛拚才會贏', '林強 向前走', '董事長樂團 眾神護臺灣'
+      '謝金燕 練舞功', '陳雷 歡喜就好', '葉啟田 愛拚才會贏', '林強 向前走', '董事長樂團 眾神護臺灣',
+      '伍佰 樹枝孤鳥', '伍佰 世界第一等', '伍佰 心愛的再會啦', '江蕙 酒後的心聲', '江蕙 甲你攬牢牢',
+      '江蕙 落雨聲', '蕭煌奇 阿嬤的話', '蕭煌奇 上水的花', '翁立友 堅持', '翁立友 我問天',
+      '羅時豐 茫茫到深更', '王識賢 勝者為王', '王識賢 雲中月圓', '荒山亮 趁我還會記', '五月天 心中無別人',
+      '茄子蛋 浪流連', '草屯囝仔 愛我你會死', '玖壹壹 癡情男子漢', '玖壹壹 來個蹦蹦', '黃妃 追追追'
     ]
   },
   {
@@ -91,7 +134,11 @@ export const THEMES = [
     keywords: [
       'BLACKPINK DDU-DU DDU-DU', 'NewJeans Hype Boy', 'BTS Dynamite', 'TWICE TT', 'IVE LOVE DIVE',
       'LE SSERAFIM ANTIFRAGILE', 'BLACKPINK Pink Venom', 'NewJeans Super Shy', 'Super Junior Sorry Sorry', 'BIGBANG BANG BANG BANG',
-      'EXO Growl', 'aespa Next Level', 'Girls Generation Gee', 'PSY Gangnam Style', 'BTS Butter'
+      'EXO Growl', 'aespa Next Level', 'Girls Generation Gee', 'PSY Gangnam Style', 'BTS Butter',
+      'BLACKPINK How You Like That', 'BLACKPINK Kill This Love', 'NewJeans OMG', 'NewJeans Ditto', 'IVE I AM',
+      'IVE After LIKE', 'TWICE Cheer Up', 'TWICE Fancy', 'TWICE What is Love', 'aespa Supernova',
+      'aespa Drama', 'aespa Spicy', '(G)I-DLE Queencard', '(G)I-DLE TOMBOY', 'ILLIT Magnetic',
+      'SEVENTEEN Super', 'Red Velvet Psycho', 'ITZY Wannabe', 'Wonder Girls Nobody', '2NE1 I Am The Best'
     ]
   },
   {
@@ -101,7 +148,11 @@ export const THEMES = [
     keywords: [
       '八三夭 想見你想見你想見你', '胡夏 那些年', '田馥甄 小幸運', '范逸臣 國境之南', '韋禮安 如果可以',
       '郁可唯 指望', '周杰倫 不能說的秘密', '告五人 在這座城市失去你', '盧廣仲 刻在我心底的名字', '張惠妹 人質',
-      '林宥嘉 兜圈', '楊宗緯 洋蔥', '動力火車 當', '庾澄慶 情非得已'
+      '林宥嘉 兜圈', '楊宗緯 洋蔥', '動力火車 當', '庾澄慶 情非得已',
+      '盧廣仲 魚仔', '周興哲 你好不好', 'A-Lin 有一種悲傷', '蘇打綠 小情歌', '伍佰 Last Dance',
+      '孫盛希 眼淚記得你', '陳奕迅 讓我留在你身邊', '王菲 匆匆那年', '朴樹 平凡之路', '家家 家家酒',
+      '五月天 後來的我們', 'F.I.R. 我們的愛', '張韶涵 遺失的美好', '陳芳語 愛你', '徐佳瑩 失落沙洲',
+      '梁靜茹 會呼吸的痛', '范瑋琪 到不了', '林俊傑 修煉愛情', '茄子蛋 愛情你比我想的閣較偉大', '鄧紫棋 光年之外'
     ]
   },
   {
@@ -111,7 +162,11 @@ export const THEMES = [
     keywords: [
       '頑童MJ116 幹大事', 'MC HotDog 差不多先生', '高爾宣 Without You', '瘦子 CHANGE', '蛋堡 關於小熊',
       '熊仔 買榜', '頑童MJ116 辣台妹', '玖壹壹 9453', '高爾宣 So Good', 'MC HotDog 我愛台妹',
-      '頑童MJ116 生童', '潮州土狗 50元的檳榔', '夜貓組 20:29', '熱狗 髒藝術家'
+      '頑童MJ116 生煎包', '潮州土狗 50元的檳榔', '夜貓組 20:29', 'MC HotDog 髒藝術家',
+      '頑童MJ116 Fly Out', '頑童MJ116 走跳', '頑童MJ116 South Side', '瘦子 伯父', '瘦子 妹妹',
+      '瘦子 Way Up', '高爾宣 最後一次', '高爾宣 Good Evening', '蛋堡 過程', '蛋堡 少年維持著煩惱',
+      '國蛋 嘻哈仔', 'Leo王 快樂的甘蔗人', '春艷 魔法男孩', '鶴 The Crane 不介意', 'ØZI B.O.',
+      '周湯豪 帥到分手', '周湯豪 i GO', '葛仲珊 打破他', '兄弟本色 迷途羔羊', '婁峻碩 Colorful'
     ]
   }
 ];
@@ -238,23 +293,49 @@ export async function searchSongs(term, limit = 15) {
 }
 
 /**
- * 根據主題 ID 盲抽隨機題目（支援自訂關鍵字輸入，並確保優先命中原唱歌手）
+ * Fisher-Yates 真隨機均勻洗牌演算法（解決 Array.sort(Math.random) 容易偏向陣列前半段歌曲的問題）
+ */
+export function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+/**
+ * 根據主題 ID 盲抽隨機題目（支援自訂關鍵字輸入、跨場次防重複記憶、以及優先命中原唱歌手）
  * @param {string} themeId 主題識別碼 ('custom' 代表自訂主題)
  * @param {number} count 抽取的題數
  * @param {string} customKeyword 自訂主題或歌手關鍵字
+ * @param {Set<string>} excludedNormTitles 該房間今晚已玩過的標準化歌名集合（避免連玩多場一直重複）
  * @returns {Promise<Array>} 隨機打亂的題目陣列
  */
-export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') {
+export async function fetchThemeTracks(themeId, count = 10, customKeyword = '', excludedNormTitles = new Set()) {
   if (themeId === 'custom' && customKeyword && customKeyword.trim()) {
-    const customResults = await searchSongs(customKeyword.trim(), Math.max(count + 8, 25));
+    const customResults = await searchSongs(customKeyword.trim(), Math.max(count + 15, 35));
     if (customResults && customResults.length > 0) {
-      return customResults.sort(() => Math.random() - 0.5).slice(0, count);
+      const unplayed = customResults.filter(s => !excludedNormTitles.has(normalizeSongTitle(s.title)));
+      const pool = unplayed.length >= count ? unplayed : customResults;
+      return shuffleArray(pool).slice(0, count);
     }
   }
 
   const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
-  const shuffledKeywords = [...theme.keywords].sort(() => Math.random() - 0.5);
-  const selectedKeywords = shuffledKeywords.slice(0, Math.min(count + 6, theme.keywords.length));
+  // 優先挑選本房間還沒出現過的歌曲關鍵字
+  const unplayedKeywords = theme.keywords.filter(kw => {
+    const parts = kw.trim().split(/\s+/);
+    const kwTitle = parts.length >= 2 ? normalizeSongTitle(parts.slice(1).join('')) : normalizeSongTitle(kw);
+    return !excludedNormTitles.has(kwTitle);
+  });
+
+  // 若未玩過的歌還夠，完全從未玩過的池子抽；若整包 50 幾首都玩過一輪了，才重新洗牌補滿
+  const candidatePool = unplayedKeywords.length >= count
+    ? shuffleArray(unplayedKeywords)
+    : [...shuffleArray(unplayedKeywords), ...shuffleArray(theme.keywords)];
+
+  const selectedKeywords = candidatePool.slice(0, Math.min(count + 6, candidatePool.length));
 
   const allTracks = [];
   const seenIds = new Set();
@@ -291,7 +372,7 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') 
 
   // 如果網路不通抓到的歌不足，自動以備援歌庫補足
   if (allTracks.length < count) {
-    for (const fb of FALLBACK_TRACKS) {
+    for (const fb of shuffleArray(FALLBACK_TRACKS)) {
       const normT = normalizeSongTitle(fb.title);
       if (!seenIds.has(fb.id) && !seenNormTitles.has(normT)) {
         seenIds.add(fb.id);
@@ -302,8 +383,8 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '') 
     }
   }
 
-  // 隨機打亂並回傳指定題數
-  return allTracks.sort(() => Math.random() - 0.5).slice(0, count);
+  // 真隨機打亂並回傳指定題數
+  return shuffleArray(allTracks).slice(0, count);
 }
 
 /**
