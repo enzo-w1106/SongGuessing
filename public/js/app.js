@@ -905,7 +905,7 @@ class CampfireSongApp {
     this.choices4Container.innerHTML = choices.map((c, idx) => `
       <button class="choice-card-4 choice-color-${idx % 4}" data-id="${c.id}">
         <span class="choice-shape-icon">${icons[idx % 4]}</span>
-        <span>🎵 ${c.title}</span>
+        <span>🎵 ${c.title}${c.artist ? ` - ${c.artist}` : ''}</span>
       </button>
     `).join('');
 
