@@ -37,7 +37,7 @@ export class GameRoomManager {
       status: 'LOBBY', // LOBBY, SUBMISSION, PLAYING, GAME_OVER
       settings: {
         mode: 'THEME', // 'THEME' (主題盲抽) 或 'SUBMISSION' (私下投稿大亂鬥)
-        themeId: 'mandopop_classic',
+        themeId: 'ktv_top100_mix',
         roundCount: 8,
         speakerMode: 'all', // 預設 'all' (所有人裝置同步發聲), 可切換為 'host' (僅主控台接喇叭播)
       },

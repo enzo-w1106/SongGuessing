@@ -5,6 +5,150 @@
 // 預設熱門主題題庫關鍵字清單（露營現場免準備、一鍵盲抽）
 export const THEMES = [
   {
+    id: 'ktv_top100_mix',
+    name: '🎤 各大 KTV 霸榜排行 Top 100+ (中文＋英文)',
+    description: '錢櫃、好樂迪、星聚點最新與歷年點播率最高的中英雙語 KTV 必點百大金曲',
+    artists: [
+      // 華語 KTV 霸榜歌手
+      '周興哲', '韋禮安', '告五人', '動力火車', '理想混蛋', '周杰倫', '陳奕迅', 'A-Lin', '林俊傑', '鄧紫棋',
+      '盧廣仲', '茄子蛋', '高爾宣', '八三夭', '李聖傑', '張惠妹', '陳勢安', '梁靜茹', '蔡依林', '五月天',
+      '林宥嘉', '田馥甄', '蕭敬騰', '李榮浩', '薛之謙', '孫燕姿', '王心凌', '張韶涵', '楊丞琳', '伍佰',
+      // 西洋 KTV 霸榜歌手
+      'Taylor Swift', 'Bruno Mars', 'Ed Sheeran', 'Maroon 5', 'Westlife', 'Backstreet Boys', 'Avril Lavigne',
+      'Adele', 'Linkin Park', 'Bon Jovi', 'Coldplay', 'Justin Bieber', 'Lady Gaga', 'OneRepublic', 'The Chainsmokers',
+      'The Weeknd', 'Dua Lipa', 'Billie Eilish', 'Imagine Dragons', 'Charlie Puth', 'Shawn Mendes', 'Queen', 'Oasis'
+    ],
+    keywords: [
+      // === 各大 KTV 華語點播榜 Top 100 精選 ===
+      '韋禮安 | 如果可以', '周興哲 | 以後別做朋友', '周興哲 | 你，好不好？', '周興哲 | 怎麼了', '周興哲 | 想知道你在想什麼',
+      '告五人 | 披星戴月的想你', '告五人 | 愛人錯過', '告五人 | 在這座城市遺失了你', '告五人 | 好不容易', '告五人 | 唯一',
+      '動力火車 | 我很好騙', '動力火車 | 忠孝東路走九遍', '動力火車 | 當', '理想混蛋 | 不是因為天氣晴朗才愛你', '理想混蛋 | 離開的一路上',
+      '理想混蛋 | 愚者', '茄子蛋 | 浪子回頭', '茄子蛋 | 浪流連', '茄子蛋 | 愛情你比我想的閣較偉大', '茄子蛋 | 閣愛妳一擺',
+      '盧廣仲 | 刻在我心底的名字', '盧廣仲 | 魚仔', '盧廣仲 | 幾分之幾', '八三夭 | 想見你想見你想見你', '八三夭 | 東區東區',
+      '八三夭 | 致青春', '高爾宣 | Without You', '陳勢安 | 天后', '李聖傑 | 痴心絕對', '李聖傑 | 手放開',
+      '李聖傑 | 最近', 'A-Lin | 有一種悲傷', 'A-Lin | 失戀無罪', 'A-Lin | 給我一個理由忘記', 'A-Lin | 摯友',
+      'A-Lin | 拿走了什麼', '鄧紫棋 | 光年之外', '鄧紫棋 | 泡沫', '鄧紫棋 | 來自天堂的魔鬼', '鄧紫棋 | 倒數',
+      '陳奕迅 | 十年', '陳奕迅 | 孤勇者', '陳奕迅 | K歌之王', '陳奕迅 | 愛情轉移', '陳奕迅 | 紅玫瑰',
+      '陳奕迅 | 讓我留在你身邊', '陳奕迅 | 好久不見', '陳奕迅 | 淘汰', '周杰倫 | 晴天', '周杰倫 | 擱淺',
+      '周杰倫 | 告白氣球', '周杰倫 | 七里香', '周杰倫 | 稻香', '周杰倫 | 安靜', '周杰倫 | 珊瑚海',
+      '周杰倫 | 說好的幸福呢', '周杰倫 | 不能說的秘密', '周杰倫 | 簡單愛', '周杰倫 | 夜曲', '周杰倫 | 青花瓷',
+      '林俊傑 | 修煉愛情', '林俊傑 | 她說', '林俊傑 | 不為誰而作的歌', '林俊傑 | 可惜沒如果', '林俊傑 | 江南',
+      '林俊傑 | 背對背擁抱', '林俊傑 | 小酒窩', '林宥嘉 | 說謊', '林宥嘉 | 兜圈', '林宥嘉 | 浪費',
+      '林宥嘉 | 成全', '田馥甄 | 小幸運', '田馥甄 | 寂寞寂寞就好', '田馥甄 | 你就不要想起我', '張惠妹 | 連名帶姓',
+      '張惠妹 | 人質', '張惠妹 | 聽海', '張惠妹 | 三天三夜', '張惠妹 | 記得', '張惠妹 | 掉了',
+      '梁靜茹 | 勇氣', '梁靜茹 | 慢冷', '梁靜茹 | 會呼吸的痛', '梁靜茹 | 分手快樂', '梁靜茹 | 可惜不是你',
+      '蔡依林 | 倒帶', '蔡依林 | 玫瑰少年', '蔡依林 | 日不落', '蔡依林 | 說愛你', '蔡依林 | 妥協',
+      '五月天 | 突然好想你', '五月天 | 溫柔', '五月天 | 我不願讓你一個人', '五月天 | 後來的我們', '五月天 | 倔強',
+      '五月天 | 志明與春嬌', '五月天 | 傷心的人別聽慢歌', '孫燕姿 | 我懷念的', '孫燕姿 | 遇見', '孫燕姿 | 天黑黑',
+      '李榮浩 | 烏梅子醬', '李榮浩 | 年少有為', '李榮浩 | 不將就', '薛之謙 | 演員', '于文文 | 體面',
+      '張遠 | 嘉賓', '王心凌 | 愛你', '王心凌 | 大眠', '伍佰 | Last Dance', '伍佰 | 挪威的森林',
+      '伍佰 | 浪人情歌', '蕭敬騰 | 王妃', '蘇打綠 | 小情歌', '胡夏 | 那些年', '承桓 | 我會等',
+
+      // === 各大 KTV 英文／西洋點播榜 Top 100 精選 ===
+      'Backstreet Boys | I Want It That Way', 'Westlife | My Love', 'Westlife | You Raise Me Up', 'Avril Lavigne | Complicated', 'Avril Lavigne | Girlfriend',
+      'Taylor Swift | Love Story', 'Taylor Swift | You Belong With Me', 'Taylor Swift | Shake It Off', 'Taylor Swift | Blank Space', 'Taylor Swift | Cruel Summer',
+      'Taylor Swift | Anti-Hero', 'Bruno Mars | Just the Way You Are', 'Bruno Mars | Uptown Funk', 'Bruno Mars | Marry You', 'Bruno Mars | That\'s What I Like',
+      'Bruno Mars | Count on Me', 'Bruno Mars | 24K Magic', 'ROSÉ | APT.', 'Lady Gaga | Die With A Smile', 'Lady Gaga | Bad Romance',
+      'Lady Gaga | Poker Face', 'Lady Gaga | Shallow', 'Ed Sheeran | Shape of You', 'Ed Sheeran | Perfect', 'Ed Sheeran | Thinking Out Loud',
+      'Ed Sheeran | Photograph', 'Maroon 5 | Sugar', 'Maroon 5 | Payphone', 'Maroon 5 | Memories', 'Maroon 5 | Girls Like You',
+      'Maroon 5 | Moves Like Jagger', 'Adele | Rolling in the Deep', 'Adele | Someone Like You', 'Adele | Hello', 'Adele | Easy On Me',
+      'Linkin Park | In the End', 'Linkin Park | Numb', 'Linkin Park | What I\'ve Done', 'Bon Jovi | It\'s My Life', 'Queen | Bohemian Rhapsody',
+      'Queen | We Will Rock You', 'Queen | We Are the Champions', 'Coldplay | Yellow', 'Coldplay | Viva La Vida', 'Coldplay | Fix You',
+      'Coldplay | Something Just Like This', 'The Chainsmokers | Closer', 'The Chainsmokers | Paris', 'OneRepublic | Counting Stars', 'OneRepublic | I Ain\'t Worried',
+      'OneRepublic | Apologize', 'Imagine Dragons | Believer', 'Imagine Dragons | Radioactive', 'Imagine Dragons | Thunder', 'Imagine Dragons | Demons',
+      'Justin Bieber | Baby', 'Justin Bieber | Sorry', 'Justin Bieber | Love Yourself', 'Justin Bieber | Peaches', 'The Kid LAROI | STAY',
+      'Shawn Mendes | Señorita', 'Shawn Mendes | Treat You Better', 'Charlie Puth | We Don\'t Talk Anymore', 'Charlie Puth | See You Again', 'Charlie Puth | Attention',
+      'The Weeknd | Blinding Lights', 'The Weeknd | Starboy', 'The Weeknd | Save Your Tears', 'Dua Lipa | Levitating', 'Dua Lipa | Don\'t Start Now',
+      'Billie Eilish | bad guy', 'Billie Eilish | Birds of a Feather', 'Olivia Rodrigo | good 4 u', 'Olivia Rodrigo | drivers license', 'Sabrina Carpenter | Espresso',
+      'Harry Styles | As It Was', 'Post Malone | Sunflower', 'Alan Walker | Faded', 'Avicii | Wake Me Up', 'Sia | Chandelier',
+      'Rihanna | Diamonds', 'Rihanna | Umbrella', 'Katy Perry | Roar', 'Katy Perry | Firework', 'Katy Perry | Dark Horse',
+      'Celine Dion | My Heart Will Go On', 'Whitney Houston | I Will Always Love You', 'Oasis | Wonderwall', 'Oasis | Don\'t Look Back in Anger', 'Green Day | Wake Me Up When September Ends',
+      'Eagles | Hotel California', 'Carpenters | Yesterday Once More', 'Miley Cyrus | Flowers', 'Miley Cyrus | Party in the U.S.A.', 'Carly Rae Jepsen | Call Me Maybe'
+    ]
+  },
+  {
+    id: 'ktv_top100_zh',
+    name: '🏆 KTV 華語點播霸榜 Top 100',
+    description: '錢櫃、好樂迪包廂人人必點的華語百大金曲排行',
+    artists: [
+      '周興哲', '韋禮安', '告五人', '動力火車', '理想混蛋', '周杰倫', '陳奕迅', 'A-Lin', '林俊傑', '鄧紫棋',
+      '盧廣仲', '茄子蛋', '高爾宣', '八三夭', '李聖傑', '張惠妹', '陳勢安', '梁靜茹', '蔡依林', '五月天',
+      '林宥嘉', '田馥甄', '蕭敬騰', '李榮浩', '薛之謙', '孫燕姿', '王心凌', '張韶涵', '楊丞琳', '伍佰',
+      '陶喆', '王力宏', '張學友', '信樂團', '蘇打綠', '徐佳瑩', '周湯豪', '頑童MJ116', '家家', '范瑋琪'
+    ],
+    keywords: [
+      '韋禮安 | 如果可以', '周興哲 | 以後別做朋友', '周興哲 | 你，好不好？', '周興哲 | 怎麼了', '周興哲 | 想知道你在想什麼',
+      '周興哲 | 永不失聯的愛', '告五人 | 披星戴月的想你', '告五人 | 愛人錯過', '告五人 | 在這座城市遺失了你', '告五人 | 好不容易',
+      '告五人 | 唯一', '告五人 | 給你一瓶魔法藥水', '動力火車 | 我很好騙', '動力火車 | 忠孝東路走九遍', '動力火車 | 當',
+      '理想混蛋 | 不是因為天氣晴朗才愛你', '理想混蛋 | 離開的一路上', '理想混蛋 | 愚者', '茄子蛋 | 浪子回頭', '茄子蛋 | 浪流連',
+      '茄子蛋 | 愛情你比我想的閣較偉大', '茄子蛋 | 閣愛妳一擺', '盧廣仲 | 刻在我心底的名字', '盧廣仲 | 魚仔', '盧廣仲 | 幾分之幾',
+      '八三夭 | 想見你想見你想見你', '八三夭 | 東區東區', '八三夭 | 致青春', '高爾宣 | Without You', '陳勢安 | 天后',
+      '李聖傑 | 痴心絕對', '李聖傑 | 手放開', '李聖傑 | 最近', 'A-Lin | 有一種悲傷', 'A-Lin | 失戀無罪',
+      'A-Lin | 給我一個理由忘記', 'A-Lin | 摯友', 'A-Lin | 拿走了什麼', '鄧紫棋 | 光年之外', '鄧紫棋 | 泡沫',
+      '鄧紫棋 | 來自天堂的魔鬼', '鄧紫棋 | 倒數', '陳奕迅 | 十年', '陳奕迅 | 孤勇者', '陳奕迅 | K歌之王',
+      '陳奕迅 | 愛情轉移', '陳奕迅 | 紅玫瑰', '陳奕迅 | 讓我留在你身邊', '陳奕迅 | 好久不見', '陳奕迅 | 淘汰',
+      '周杰倫 | 晴天', '周杰倫 | 擱淺', '周杰倫 | 告白氣球', '周杰倫 | 七里香', '周杰倫 | 稻香',
+      '周杰倫 | 安靜', '周杰倫 | 珊瑚海', '周杰倫 | 說好的幸福呢', '周杰倫 | 不能說的秘密', '周杰倫 | 簡單愛',
+      '周杰倫 | 夜曲', '周杰倫 | 青花瓷', '周杰倫 | 楓', '周杰倫 | 退後', '周杰倫 | 一路向北',
+      '林俊傑 | 修煉愛情', '林俊傑 | 她說', '林俊傑 | 不為誰而作的歌', '林俊傑 | 可惜沒如果', '林俊傑 | 江南',
+      '林俊傑 | 背對背擁抱', '林俊傑 | 小酒窩', '林宥嘉 | 說謊', '林宥嘉 | 兜圈', '林宥嘉 | 浪費',
+      '林宥嘉 | 成全', '田馥甄 | 小幸運', '田馥甄 | 寂寞寂寞就好', '田馥甄 | 你就不要想起我', '張惠妹 | 連名帶姓',
+      '張惠妹 | 人質', '張惠妹 | 聽海', '張惠妹 | 三天三夜', '張惠妹 | 記得', '張惠妹 | 掉了',
+      '梁靜茹 | 勇氣', '梁靜茹 | 慢冷', '梁靜茹 | 會呼吸的痛', '梁靜茹 | 分手快樂', '梁靜茹 | 可惜不是你',
+      '蔡依林 | 倒帶', '蔡依林 | 玫瑰少年', '蔡依林 | 日不落', '蔡依林 | 說愛你', '蔡依林 | 妥協',
+      '五月天 | 突然好想你', '五月天 | 溫柔', '五月天 | 我不願讓你一個人', '五月天 | 後來的我們', '五月天 | 倔強',
+      '五月天 | 志明與春嬌', '五月天 | 傷心的人別聽慢歌', '孫燕姿 | 我懷念的', '孫燕姿 | 遇見', '孫燕姿 | 天黑黑',
+      '李榮浩 | 烏梅子醬', '李榮浩 | 年少有為', '李榮浩 | 不將就', '薛之謙 | 演員', '于文文 | 體面',
+      '張遠 | 嘉賓', '王心凌 | 愛你', '王心凌 | 大眠', '伍佰 | Last Dance', '伍佰 | 挪威的森林',
+      '伍佰 | 浪人情歌', '蕭敬騰 | 王妃', '蘇打綠 | 小情歌', '胡夏 | 那些年', '承桓 | 我會等',
+      '陳華 | 想和你看五月的晚霞', '家家 | 家家酒', '家家 | 命運', '周湯豪 | 帥到分手', '頑童MJ116 | 辣台妹'
+    ]
+  },
+  {
+    id: 'ktv_top100_en',
+    name: '🌎 KTV 英文／西洋點播霸榜 Top 100',
+    description: '各大 KTV 英文點播榜前 100 名經典與潮流西洋金曲',
+    artists: [
+      'Taylor Swift', 'Bruno Mars', 'Ed Sheeran', 'Maroon 5', 'Westlife', 'Backstreet Boys', 'Avril Lavigne',
+      'Adele', 'Linkin Park', 'Bon Jovi', 'Coldplay', 'Justin Bieber', 'Lady Gaga', 'OneRepublic', 'The Chainsmokers',
+      'The Weeknd', 'Dua Lipa', 'Billie Eilish', 'Imagine Dragons', 'Charlie Puth', 'Shawn Mendes', 'Queen',
+      'Oasis', 'Rihanna', 'Katy Perry', 'Sia', 'Olivia Rodrigo', 'Sabrina Carpenter', 'Ariana Grande', 'Post Malone'
+    ],
+    keywords: [
+      'Backstreet Boys | I Want It That Way', 'Backstreet Boys | As Long As You Love Me', 'Backstreet Boys | Everybody',
+      'Westlife | My Love', 'Westlife | You Raise Me Up', 'Westlife | Seasons in the Sun', 'Westlife | Uptown Girl',
+      'Avril Lavigne | Complicated', 'Avril Lavigne | Girlfriend', 'Avril Lavigne | Sk8er Boi', 'Avril Lavigne | When You\'re Gone',
+      'Taylor Swift | Love Story', 'Taylor Swift | You Belong With Me', 'Taylor Swift | Shake It Off', 'Taylor Swift | Blank Space',
+      'Taylor Swift | Cruel Summer', 'Taylor Swift | Anti-Hero', 'Taylor Swift | Style', 'Taylor Swift | I Knew You Were Trouble',
+      'Bruno Mars | Just the Way You Are', 'Bruno Mars | Uptown Funk', 'Bruno Mars | Marry You', 'Bruno Mars | That\'s What I Like',
+      'Bruno Mars | Count on Me', 'Bruno Mars | 24K Magic', 'Bruno Mars | The Lazy Song', 'Bruno Mars | Grenade',
+      'ROSÉ | APT.', 'Lady Gaga | Die With A Smile', 'Lady Gaga | Bad Romance', 'Lady Gaga | Poker Face',
+      'Lady Gaga | Shallow', 'Lady Gaga | Born This Way', 'Ed Sheeran | Shape of You', 'Ed Sheeran | Perfect',
+      'Ed Sheeran | Thinking Out Loud', 'Ed Sheeran | Photograph', 'Ed Sheeran | Bad Habits', 'Ed Sheeran | Shivers',
+      'Maroon 5 | Sugar', 'Maroon 5 | Payphone', 'Maroon 5 | Memories', 'Maroon 5 | Girls Like You',
+      'Maroon 5 | Moves Like Jagger', 'Maroon 5 | Maps', 'Maroon 5 | Animals', 'Maroon 5 | One More Night',
+      'Adele | Rolling in the Deep', 'Adele | Someone Like You', 'Adele | Hello', 'Adele | Easy On Me', 'Adele | Set Fire to the Rain',
+      'Linkin Park | In the End', 'Linkin Park | Numb', 'Linkin Park | What I\'ve Done', 'Linkin Park | Faint',
+      'Bon Jovi | It\'s My Life', 'Bon Jovi | Livin\' on a Prayer', 'Queen | Bohemian Rhapsody', 'Queen | We Will Rock You',
+      'Queen | We Are the Champions', 'Queen | Don\'t Stop Me Now', 'Coldplay | Yellow', 'Coldplay | Viva La Vida',
+      'Coldplay | Fix You', 'Coldplay | Something Just Like This', 'Coldplay | A Sky Full of Stars', 'The Chainsmokers | Closer',
+      'The Chainsmokers | Paris', 'OneRepublic | Counting Stars', 'OneRepublic | I Ain\'t Worried', 'OneRepublic | Apologize',
+      'Imagine Dragons | Believer', 'Imagine Dragons | Radioactive', 'Imagine Dragons | Thunder', 'Imagine Dragons | Demons',
+      'Justin Bieber | Baby', 'Justin Bieber | Sorry', 'Justin Bieber | Love Yourself', 'Justin Bieber | Peaches',
+      'The Kid LAROI | STAY', 'Shawn Mendes | Señorita', 'Shawn Mendes | Treat You Better', 'Shawn Mendes | There\'s Nothing Holdin\' Me Back',
+      'Charlie Puth | We Don\'t Talk Anymore', 'Charlie Puth | See You Again', 'Charlie Puth | Attention', 'Charlie Puth | Light Switch',
+      'The Weeknd | Blinding Lights', 'The Weeknd | Starboy', 'The Weeknd | Save Your Tears', 'Dua Lipa | Levitating',
+      'Dua Lipa | Don\'t Start Now', 'Dua Lipa | New Rules', 'Billie Eilish | bad guy', 'Billie Eilish | Birds of a Feather',
+      'Olivia Rodrigo | good 4 u', 'Olivia Rodrigo | drivers license', 'Olivia Rodrigo | vampire', 'Sabrina Carpenter | Espresso',
+      'Harry Styles | As It Was', 'Harry Styles | Watermelon Sugar', 'Post Malone | Sunflower', 'Post Malone | Circles',
+      'Alan Walker | Faded', 'Avicii | Wake Me Up', 'Sia | Chandelier', 'Sia | Cheap Thrills',
+      'Rihanna | Diamonds', 'Rihanna | Umbrella', 'Katy Perry | Roar', 'Katy Perry | Firework', 'Katy Perry | Last Friday Night',
+      'Celine Dion | My Heart Will Go On', 'Whitney Houston | I Will Always Love You', 'Oasis | Wonderwall', 'Oasis | Don\'t Look Back in Anger',
+      'Green Day | Boulevard of Broken Dreams', 'Eagles | Hotel California', 'Carpenters | Yesterday Once More', 'Miley Cyrus | Flowers',
+      'Carly Rae Jepsen | Call Me Maybe', 'LMFAO | Party Rock Anthem', ' Beyonce | Halo', 'Sam Smith | Stay With Me', 'Passenger | Let Her Go'
+    ]
+  },
+  {
     id: 'mandopop_classic',
     name: '🔥 90-00 華語金曲 / KTV必點',
     description: '張學友、陳奕迅、周杰倫、孫燕姿、梁靜茹、王力宏、蔡依林、林俊傑等回憶殺金曲',
@@ -389,6 +533,38 @@ export function shuffleArray(arr) {
 }
 
 /**
+ * 解析主題關鍵字項目（支援 "歌手 | 歌名" 與 "歌手 歌名" 雙格式，完美相容英文多字歌手名稱）
+ */
+export function parseKeywordEntry(kw) {
+  const raw = String(kw || '').trim();
+  if (raw.includes('|')) {
+    const [artistPart, ...titleParts] = raw.split('|');
+    const artist = artistPart.trim();
+    const title = titleParts.join('|').trim();
+    return {
+      artist,
+      title,
+      searchQuery: `${artist} ${title}`.trim()
+    };
+  }
+  const parts = raw.split(/\s+/);
+  if (parts.length >= 2) {
+    const artist = parts[0].trim();
+    const title = parts.slice(1).join(' ').trim();
+    return {
+      artist,
+      title,
+      searchQuery: raw
+    };
+  }
+  return {
+    artist: '',
+    title: raw,
+    searchQuery: raw
+  };
+}
+
+/**
  * 根據主題 ID 盲抽隨機題目（支援自訂關鍵字輸入、跨場次防重複記憶、以及優先命中原唱歌手）
  * @param {string} themeId 主題識別碼 ('custom' 代表自訂主題)
  * @param {number} count 抽取的題數
@@ -409,8 +585,8 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '', 
   const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
   // 1. 優先挑選本房間還沒出現過的精選代表作關鍵字
   const unplayedKeywords = theme.keywords.filter(kw => {
-    const parts = kw.trim().split(/\s+/);
-    const kwTitle = parts.length >= 2 ? normalizeSongTitle(parts.slice(1).join('')) : normalizeSongTitle(kw);
+    const { title } = parseKeywordEntry(kw);
+    const kwTitle = normalizeSongTitle(title);
     return !excludedNormTitles.has(kwTitle);
   });
 
@@ -432,7 +608,10 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '', 
 
   // 並行執行精選歌曲與動態歌手搜尋，大幅提升開局速度
   const [keywordResultsList, artistResultsList] = await Promise.all([
-    Promise.all(selectedKeywords.map(kw => searchSongs(kw, 6).then(res => ({ kw, res })))),
+    Promise.all(selectedKeywords.map(kw => {
+      const parsed = parseKeywordEntry(kw);
+      return searchSongs(parsed.searchQuery, 6).then(res => ({ parsed, res }));
+    })),
     Promise.all(selectedArtists.map(artist => searchSongs(artist, 25).then(res => ({ artist, res }))))
   ]);
 
@@ -459,11 +638,10 @@ export async function fetchThemeTracks(themeId, count = 10, customKeyword = '', 
   }
 
   // B. 再由精選必點金曲清單補齊題數
-  for (const { kw, res } of keywordResultsList) {
+  for (const { parsed, res } of keywordResultsList) {
     if (!res || res.length === 0) continue;
-    const parts = kw.trim().split(/\s+/);
-    const expectedArtist = parts.length >= 2 ? parts[0].toLowerCase() : '';
-    const expectedTitle = parts.length >= 2 ? normalizeSongTitle(parts.slice(1).join('')) : '';
+    const expectedArtist = (parsed.artist || '').toLowerCase();
+    const expectedTitle = normalizeSongTitle(parsed.title);
 
     // 優先選擇「歌手名稱吻合原唱」且「歌名吻合」的錄音室原曲，杜絕路人翻唱版
     const sortedCandidates = [...res].sort((a, b) => {
@@ -871,10 +1049,8 @@ registerSongsToCatalog(SEED_SONGS);
 registerSongsToCatalog(FALLBACK_TRACKS);
 for (const theme of THEMES) {
   for (const kw of theme.keywords) {
-    const parts = kw.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      const artist = parts[0];
-      const title = parts.slice(1).join(' ');
+    const { artist, title } = parseKeywordEntry(kw);
+    if (artist && title) {
       registerSongsToCatalog([{ title, artist }]);
     }
   }
