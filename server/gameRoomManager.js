@@ -475,9 +475,9 @@ export class GameRoomManager {
 
       this.revealRound(roomCode);
     } else {
-      // 答錯！扣小分，嚴格保密正解，將該玩家本題鎖定
-      const penalty = 30;
-      player.score = Math.max(0, player.score - penalty);
+      // 答錯！依階段比例重扣（Stage 1 扣 150 分、Stage 2 扣 100 分，允許扣至負分防止盲按），並將該玩家本題搶鈴鎖定
+      const penalty = room.previousStage === 'STAGE_1' ? 150 : 100;
+      player.score -= penalty;
       room.lockedOutPlayerIds.add(socketId);
 
       this.io.to(roomCode).emit('buzzer_result', {
@@ -486,7 +486,7 @@ export class GameRoomManager {
         playerName: player.name,
         penalty: penalty,
         scoreboard: Array.from(room.players.values()).sort((a, b) => b.score - a.score),
-        message: `❌ ${player.name} 答錯扣 ${penalty} 分！正解繼續保密中...`
+        message: `❌ ${player.name} 搶答失敗倒扣 ${penalty} 分（目前 ${player.score} 分）！正解繼續保密中...`
       });
 
       // 依先前階段繼續遊戲，讓其他人有機會搶
@@ -499,7 +499,7 @@ export class GameRoomManager {
   }
 
   /**
-   * 階段 3: 全體四選一競速 (100~150 分)
+   * 階段 3: 全體四選一競速 (答對 +100~150 分 / 答錯 -50 分)
    */
   startStage3(roomCode) {
     const room = this.rooms.get(roomCode);
@@ -531,11 +531,11 @@ export class GameRoomManager {
 
     const isCorrect = choiceId === room.currentTrack.id;
     const remainingTimeRatio = Math.max(0, (room.stageDeadline - Date.now()) / 12000);
-    // 依作答速度給予 100 ~ 150 分
-    const points = isCorrect ? Math.floor(100 + remainingTimeRatio * 50) : 0;
+    // 依作答速度給予 +100 ~ +150 分；若選錯則倒扣 50 分（防止閉眼秒按亂猜）
+    const points = isCorrect ? Math.floor(100 + remainingTimeRatio * 50) : -50;
 
     const player = room.players.get(socketId);
-    if (player && isCorrect) {
+    if (player) {
       player.score += points;
     }
 
@@ -551,14 +551,13 @@ export class GameRoomManager {
       lastEvent: {
         playerId: socketId,
         playerName: player ? player.name : '',
-        points: isCorrect ? points : 0,
+        points,
         isCorrect
       }
     });
 
-    // 檢查是否所有未鎖定的玩家都已作答完畢
-    const eligiblePlayerCount = Array.from(room.players.keys()).filter(id => !room.lockedOutPlayerIds.has(id)).length;
-    if (room.stage3Answers.size >= eligiblePlayerCount) {
+    // 檢查是否所有玩家都已作答完畢
+    if (room.stage3Answers.size >= room.players.size) {
       if (room.stageTimer) clearTimeout(room.stageTimer);
       this.revealRound(roomCode);
     }

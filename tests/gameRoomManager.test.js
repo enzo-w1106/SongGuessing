@@ -93,7 +93,7 @@ test('三階段搶答驗證：答對加分且揭曉、答錯扣分且不洩漏�
   // 情況 1: 故意答錯（說「吻別」）
   manager.verifyBuzzerAnswer(room.code, 'player_2', '吻別');
   const p2 = room.players.get('player_2');
-  assert.equal(p2.score, 0); // 扣分後最低 0
+  assert.equal(p2.score, -150); // Stage 1 答錯倒扣 150 分（可扣至負分）
   assert.ok(room.lockedOutPlayerIds.has('player_2'));
   // 關鍵驗證：答錯不能揭曉，且由 Stage 1 推進至 Stage 2！
   assert.equal(room.currentStage, 'STAGE_2');

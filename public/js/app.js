@@ -247,9 +247,18 @@ class CampfireSongApp {
     });
 
     // 即時排行榜跳動通知 (Stage 3 或答題變動)
-    this.socket.on('live_scoreboard_update', ({ scoreboard }) => {
+    this.socket.on('live_scoreboard_update', ({ scoreboard, lastEvent }) => {
       if (scoreboard) {
         this.updateLiveScoreboards(scoreboard);
+      }
+      if (lastEvent && lastEvent.playerId === this.myPlayerId) {
+        if (lastEvent.isCorrect) {
+          this.audio.playCorrectSfx();
+          this.showTemporaryBuzzerFeedback(`🎯 四選一命中！獲得 +${lastEvent.points} 分！`, true);
+        } else {
+          this.audio.playWrongSfx();
+          this.showTemporaryBuzzerFeedback(`❌ 四選一選錯！倒扣 ${Math.abs(lastEvent.points)} 分！`, false);
+        }
       }
     });
 
@@ -676,12 +685,15 @@ class CampfireSongApp {
     this.submissionTriggerPanel.style.display = (state.settings.mode === 'SUBMISSION') ? 'block' : 'none';
   }
 
-  showTemporaryBuzzerFeedback(message) {
+  showTemporaryBuzzerFeedback(message, isSuccess = false) {
     if (!this.buzzerFeedbackBanner) return;
     if (this.buzzerFeedbackTimer) {
       clearTimeout(this.buzzerFeedbackTimer);
     }
     this.buzzerFeedbackBanner.innerText = message;
+    this.buzzerFeedbackBanner.style.background = isSuccess ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.18)';
+    this.buzzerFeedbackBanner.style.borderColor = isSuccess ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.45)';
+    this.buzzerFeedbackBanner.style.color = isSuccess ? '#6ee7b7' : '#fca5a5';
     this.buzzerFeedbackBanner.style.display = 'block';
     this.buzzerFeedbackTimer = setTimeout(() => {
       if (this.buzzerFeedbackBanner) {
@@ -758,9 +770,12 @@ class CampfireSongApp {
     this.startCountdownTimer(round.deadline);
 
     if (round.stage === 'STAGE_1') {
-      this.stageStatusTitle.innerText = 'STAGE 1：前奏 1.2 秒挑戰 (+300分)';
+      this.stageStatusTitle.innerText = 'STAGE 1：前奏 1.2 秒挑戰 (+300分 / 答錯-150分)';
       this.panelBuzzer.style.display = 'flex';
       this.btnBuzzer.classList.remove('disabled');
+      if (this.buzzerStatusMsg) {
+        this.buzzerStatusMsg.innerText = '⚡ 前奏 1.2 秒高風險高報酬：答對 +300 分，答錯倒扣 150 分（可扣至負分）！';
+      }
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -769,9 +784,12 @@ class CampfireSongApp {
         });
       }
     } else if (round.stage === 'STAGE_2') {
-      this.stageStatusTitle.innerText = 'STAGE 2：進階 3.5 秒搶答 (+200分)';
+      this.stageStatusTitle.innerText = 'STAGE 2：進階 3.5 秒搶答 (+200分 / 答錯-100分)';
       this.panelBuzzer.style.display = 'flex';
       this.btnBuzzer.classList.remove('disabled');
+      if (this.buzzerStatusMsg) {
+        this.buzzerStatusMsg.innerText = '🔥 進階 3.5 秒搶答：答對 +200 分，答錯倒扣 100 分（可扣至負分）！';
+      }
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -793,7 +811,7 @@ class CampfireSongApp {
         this.answeringPlayerName.innerText = `📢 ${round.buzzerWinner?.name || '有人'} 搶答了！`;
       }
     } else if (round.stage === 'STAGE_3') {
-      this.stageStatusTitle.innerText = 'STAGE 3：全體四選一競速 (+100~150分)';
+      this.stageStatusTitle.innerText = 'STAGE 3：全體四選一競速 (+100~150分 / 答錯-50分)';
       if (isNewStage) {
         this.renderStage3Choices(round.choices);
       }
