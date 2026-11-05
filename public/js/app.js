@@ -257,7 +257,7 @@ class CampfireSongApp {
           this.showTemporaryBuzzerFeedback(`🎯 四選一命中！獲得 +${lastEvent.points} 分！`, true);
         } else {
           this.audio.playWrongSfx();
-          this.showTemporaryBuzzerFeedback(`❌ 四選一選錯！倒扣 ${Math.abs(lastEvent.points)} 分！`, false);
+          this.showTemporaryBuzzerFeedback(`❌ 四選一未命中（不扣分）！`, false);
         }
       }
     });
@@ -811,7 +811,7 @@ class CampfireSongApp {
         this.answeringPlayerName.innerText = `📢 ${round.buzzerWinner?.name || '有人'} 搶答了！`;
       }
     } else if (round.stage === 'STAGE_3') {
-      this.stageStatusTitle.innerText = 'STAGE 3：全體四選一競速 (+100~150分 / 答錯-50分)';
+      this.stageStatusTitle.innerText = 'STAGE 3：全體四選一競速 (+100~150分 / 不扣分)';
       if (isNewStage) {
         this.renderStage3Choices(round.choices);
       }

@@ -531,11 +531,11 @@ export class GameRoomManager {
 
     const isCorrect = choiceId === room.currentTrack.id;
     const remainingTimeRatio = Math.max(0, (room.stageDeadline - Date.now()) / 12000);
-    // 依作答速度給予 +100 ~ +150 分；若選錯則倒扣 50 分（防止閉眼秒按亂猜）
-    const points = isCorrect ? Math.floor(100 + remainingTimeRatio * 50) : -50;
+    // 依作答速度給予 +100 ~ +150 分；選錯不扣分 (0 分)
+    const points = isCorrect ? Math.floor(100 + remainingTimeRatio * 50) : 0;
 
     const player = room.players.get(socketId);
-    if (player) {
+    if (player && isCorrect) {
       player.score += points;
     }
 
