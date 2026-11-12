@@ -71,7 +71,7 @@
             <div style="text-align: center; margin: 10px 0; color: var(--text-dim); font-size: 13px;">── 或 ──</div>
 
             <button id="btn-solo-mode" class="btn-secondary">
-              <span>📱 單機傳遞輪流玩 (單支手機接喇叭)</span>
+              <span>🎧 單人練習模式 (自我挑戰猜歌)</span>
             </button>
           </div>
         </div>
@@ -82,12 +82,12 @@
     <section id="view-lobby" class="view-section" style="display: none;">
       <div class="glass-card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h2 style="font-size: 20px;">⛺ 露營等候大廳</h2>
+          <h2 id="lobby-title" style="font-size: 20px;">⛺ 露營等候大廳</h2>
           <span id="lobby-player-count" style="font-size: 13px; color: var(--fire-gold);">1 位玩家已就緒</span>
         </div>
 
         <!-- QR Code 掃描分享 -->
-        <div class="qr-container">
+        <div id="lobby-qr-box" class="qr-container">
           <img id="lobby-qr-img" class="qr-image" alt="QR Code">
           <div class="qr-tip">📱 請朋友掃描上方 QR Code 加入房間</div>
           <div id="lobby-join-url" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; word-break: break-all;"></div>
@@ -97,7 +97,7 @@
         <div id="host-settings-panel" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 10px;">
           <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--fire-gold);">⚙️ 遊戲模式與題庫設定</h3>
 
-          <div style="margin-bottom: 12px;">
+          <div id="game-mode-selector-group" style="margin-bottom: 12px;">
             <label style="font-size: 13px; color: var(--text-muted);">選擇遊戲形式：</label>
             <div style="display: flex; gap: 8px; margin-top: 6px;">
               <button id="mode-opt-theme" class="btn-primary" style="flex: 1; padding: 10px; font-size: 14px;">🔥 主題隨機盲抽</button>
@@ -123,7 +123,7 @@
                 <option value="12">12 題 (暢快大戰)</option>
               </select>
             </div>
-            <div style="flex: 1;">
+            <div id="speaker-mode-group" style="flex: 1;">
               <label style="font-size: 13px; color: var(--text-muted);">放音喇叭設定：</label>
               <select id="select-speaker-mode" class="input-field" style="margin-top: 6px;">
                 <option value="all">各自手機皆同步發聲 (推薦)</option>
@@ -144,7 +144,7 @@
         </div>
 
         <!-- 玩家列表 -->
-        <div style="margin-top: 14px;">
+        <div id="lobby-players-section" style="margin-top: 14px;">
           <label style="font-size: 13px; color: var(--text-muted);">已加入的露營夥伴：</label>
           <div id="lobby-players-list" class="player-chips-grid"></div>
         </div>

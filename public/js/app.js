@@ -16,6 +16,7 @@ class CampfireSongApp {
     this.myPlayerName = localStorage.getItem('campfire_player_name') || '';
     this.currentRoomCode = null;
     this.isHost = false;
+    this.isSoloPractice = false;
     this.roomState = null;
     this.mySubmissionsCount = 0;
     this.selectedChoiceId = null;
@@ -68,16 +69,21 @@ class CampfireSongApp {
     }
 
     // 大廳元素
+    this.lobbyTitle = document.getElementById('lobby-title');
+    this.lobbyQrBox = document.getElementById('lobby-qr-box');
     this.lobbyQrImg = document.getElementById('lobby-qr-img');
     this.lobbyJoinUrl = document.getElementById('lobby-join-url');
     this.lobbyPlayerCount = document.getElementById('lobby-player-count');
+    this.lobbyPlayersSection = document.getElementById('lobby-players-section');
     this.lobbyPlayersList = document.getElementById('lobby-players-list');
     this.hostSettingsPanel = document.getElementById('host-settings-panel');
+    this.gameModeSelectorGroup = document.getElementById('game-mode-selector-group');
     this.modeOptTheme = document.getElementById('mode-opt-theme');
     this.modeOptSubmission = document.getElementById('mode-opt-submission');
     this.themeSelectorGroup = document.getElementById('theme-selector-group');
     this.selectTheme = document.getElementById('select-theme');
     this.selectRounds = document.getElementById('select-rounds');
+    this.speakerModeGroup = document.getElementById('speaker-mode-group');
     this.selectSpeakerMode = document.getElementById('select-speaker-mode');
     this.submissionTriggerPanel = document.getElementById('submission-trigger-panel');
     this.btnOpenSubmissionModal = document.getElementById('btn-open-submission-modal');
@@ -295,6 +301,7 @@ class CampfireSongApp {
           this.inputPlayerName.focus();
           return alert('請先輸入你的暱稱喔！');
         }
+        this.isSoloPractice = false;
         const code = this.inputJoinCode.value.trim().toUpperCase();
         this.savePlayerName(name);
         this.socket.emit('join_room', { roomCode: code, playerName: name });
@@ -352,6 +359,7 @@ class CampfireSongApp {
     // 建立房間
     this.btnCreateRoom.addEventListener('click', () => {
       this.audio.initContext();
+      this.isSoloPractice = false;
       const name = this.inputPlayerName.value.trim() || '營火守護者';
       this.savePlayerName(name);
       this.socket.emit('create_room', { playerName: name });
@@ -360,6 +368,7 @@ class CampfireSongApp {
     // 加入房間
     this.btnJoinRoom.addEventListener('click', () => {
       this.audio.initContext();
+      this.isSoloPractice = false;
       const name = this.inputPlayerName.value.trim() || '露營好友';
       const code = this.inputJoinCode.value.trim().toUpperCase();
       if (!code) return alert('請輸入 4 碼房號！');
@@ -367,7 +376,7 @@ class CampfireSongApp {
       this.socket.emit('join_room', { roomCode: code, playerName: name });
     });
 
-    // 單機模式
+    // 單人練習模式
     this.btnSoloMode.addEventListener('click', () => {
       this.audio.initContext();
       this.startSoloMode();
@@ -621,9 +630,14 @@ class CampfireSongApp {
 
   onRoomEntered(state) {
     this.roomState = state;
-    this.headerRoomBadge.style.display = 'flex';
+    if (this.isSoloPractice) {
+      this.updateRoomSettings({ isSolo: true, mode: 'THEME', speakerMode: 'all' });
+    }
+    this.headerRoomBadge.style.display = this.isSoloPractice ? 'none' : 'flex';
     this.badgeRoomCode.innerText = state.code;
-    this.loadNetworkInfo(state.code);
+    if (!this.isSoloPractice) {
+      this.loadNetworkInfo(state.code);
+    }
     this.showView('lobby');
     this.renderLobbyState();
   }
@@ -657,7 +671,28 @@ class CampfireSongApp {
 
   renderLobbyState() {
     const state = this.roomState;
-    this.lobbyPlayerCount.innerText = `${state.players.length} 位玩家已就緒`;
+    const isSolo = Boolean(this.isSoloPractice || state.settings?.isSolo);
+
+    if (this.lobbyTitle) {
+      this.lobbyTitle.innerText = isSolo ? '🎧 單人自我挑戰練習' : '⛺ 露營等候大廳';
+    }
+    this.lobbyPlayerCount.innerText = isSolo ? '單人練習模式' : `${state.players.length} 位玩家已就緒`;
+
+    if (this.lobbyQrBox) {
+      this.lobbyQrBox.style.display = isSolo ? 'none' : 'flex';
+    }
+    if (this.gameModeSelectorGroup) {
+      this.gameModeSelectorGroup.style.display = isSolo ? 'none' : 'block';
+    }
+    if (this.speakerModeGroup) {
+      this.speakerModeGroup.style.display = isSolo ? 'none' : 'block';
+    }
+    if (this.lobbyPlayersSection) {
+      this.lobbyPlayersSection.style.display = isSolo ? 'none' : 'block';
+    }
+    if (this.headerRoomBadge) {
+      this.headerRoomBadge.style.display = isSolo ? 'none' : 'flex';
+    }
 
     if (this.selectSpeakerMode && state.settings?.speakerMode) {
       this.selectSpeakerMode.value = state.settings.speakerMode;
@@ -675,7 +710,10 @@ class CampfireSongApp {
     // 房主控制列
     if (this.isHost) {
       this.hostSettingsPanel.style.display = 'block';
-      this.btnStartGame.style.display = 'block';
+      this.btnStartGame.style.display = 'flex';
+      this.btnStartGame.innerHTML = isSolo
+        ? '<span>🚀 開始單人練習！</span>'
+        : '<span>🚀 人到齊了，開始猜歌！</span>';
       this.waitingHostNotice.style.display = 'none';
     } else {
       this.hostSettingsPanel.style.display = 'none';
@@ -684,7 +722,7 @@ class CampfireSongApp {
     }
 
     // 私下投稿按鈕顯示與否
-    this.submissionTriggerPanel.style.display = (state.settings.mode === 'SUBMISSION') ? 'block' : 'none';
+    this.submissionTriggerPanel.style.display = (!isSolo && state.settings.mode === 'SUBMISSION') ? 'block' : 'none';
   }
 
   showTemporaryBuzzerFeedback(message, isSuccess = false) {
@@ -1058,11 +1096,11 @@ class CampfireSongApp {
     }
   }
 
-  // 單機模式
+  // 單人練習模式
   startSoloMode() {
-    const name = this.inputPlayerName.value.trim() || '露營歌王';
+    this.isSoloPractice = true;
+    const name = this.inputPlayerName.value.trim() || '單人挑戰者';
     this.savePlayerName(name);
-    // 直接建立一間房即可一人與現場朋友同機玩
     this.socket.emit('create_room', { playerName: name });
   }
 }
