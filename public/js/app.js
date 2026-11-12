@@ -125,6 +125,7 @@ class CampfireSongApp {
     this.panelSomeoneAnswering = document.getElementById('panel-someone-answering');
     this.answeringPlayerName = document.getElementById('answering-player-name');
     this.panelStage3Choices = document.getElementById('panel-stage3-choices');
+    this.stage3StatusMsg = document.getElementById('stage3-status-msg');
     this.choices4Container = document.getElementById('choices-4-container');
     this.panelRevealControls = document.getElementById('panel-reveal-controls');
     this.revealToastMsg = document.getElementById('reveal-toast-msg');
@@ -442,6 +443,7 @@ class CampfireSongApp {
 
     // 搶答大按鈕 (Stage 1 / 2)
     this.btnBuzzer.addEventListener('click', () => {
+      if (this.btnBuzzer.disabled || this.btnBuzzer.classList.contains('disabled')) return;
       this.audio.initContext();
       this.socket.emit('buzz_in', { roomCode: this.currentRoomCode });
     });
@@ -769,13 +771,12 @@ class CampfireSongApp {
     // 啟動倒數計時條
     this.startCountdownTimer(round.deadline);
 
+    const isLockedOut = Array.isArray(round.lockedOutPlayerIds) && round.lockedOutPlayerIds.includes(this.myPlayerId);
+
     if (round.stage === 'STAGE_1') {
       this.stageStatusTitle.innerText = 'STAGE 1：前奏 1.2 秒挑戰 (+300分 / 答錯-150分)';
       this.panelBuzzer.style.display = 'flex';
-      this.btnBuzzer.classList.remove('disabled');
-      if (this.buzzerStatusMsg) {
-        this.buzzerStatusMsg.innerText = '⚡ 前奏 1.2 秒高風險高報酬：答對 +300 分，答錯倒扣 150 分（可扣至負分）！';
-      }
+      this.updateBuzzerLockUI(isLockedOut, '⚡ 前奏 1.2 秒高風險高報酬：答對 +300 分，答錯倒扣 150 分（可扣至負分）！');
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -786,10 +787,7 @@ class CampfireSongApp {
     } else if (round.stage === 'STAGE_2') {
       this.stageStatusTitle.innerText = 'STAGE 2：進階 3.5 秒搶答 (+200分 / 答錯-100分)';
       this.panelBuzzer.style.display = 'flex';
-      this.btnBuzzer.classList.remove('disabled');
-      if (this.buzzerStatusMsg) {
-        this.buzzerStatusMsg.innerText = '🔥 進階 3.5 秒搶答：答對 +200 分，答錯倒扣 100 分（可扣至負分）！';
-      }
+      this.updateBuzzerLockUI(isLockedOut, '🔥 進階 3.5 秒搶答：答對 +200 分，答錯倒扣 100 分（可扣至負分）！');
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -813,7 +811,9 @@ class CampfireSongApp {
     } else if (round.stage === 'STAGE_3') {
       this.stageStatusTitle.innerText = 'STAGE 3：全體四選一競速 (+100~150分 / 不扣分)';
       if (isNewStage) {
-        this.renderStage3Choices(round.choices);
+        this.renderStage3Choices(round.choices, isLockedOut);
+      } else {
+        this.applyStage3LockState(isLockedOut);
       }
       this.panelStage3Choices.style.display = 'block';
 
@@ -843,6 +843,31 @@ class CampfireSongApp {
       }
 
       this.renderScoreboard(this.roundScoreboardList);
+    }
+  }
+
+  updateBuzzerLockUI(isLockedOut, defaultStatusText) {
+    if (!this.btnBuzzer) return;
+    if (isLockedOut) {
+      this.btnBuzzer.classList.add('disabled');
+      this.btnBuzzer.disabled = true;
+      this.btnBuzzer.innerHTML = `
+        <span>🔒 已封鎖</span>
+        <span class="buzzer-subtext">本題搶答失敗</span>
+      `;
+      if (this.buzzerStatusMsg) {
+        this.buzzerStatusMsg.innerText = '🔒 你在本題已搶答失敗，搶答鈕已封鎖，請等待其他玩家作答！';
+      }
+    } else {
+      this.btnBuzzer.classList.remove('disabled');
+      this.btnBuzzer.disabled = false;
+      this.btnBuzzer.innerHTML = `
+        <span>🚨 搶答！</span>
+        <span class="buzzer-subtext">先按先得分</span>
+      `;
+      if (this.buzzerStatusMsg) {
+        this.buzzerStatusMsg.innerText = defaultStatusText;
+      }
     }
   }
 
@@ -917,19 +942,41 @@ class CampfireSongApp {
     });
   }
 
-  renderStage3Choices(choices) {
+  applyStage3LockState(isLockedOut) {
+    if (this.stage3StatusMsg) {
+      if (isLockedOut) {
+        this.stage3StatusMsg.innerText = '🔒 你在本題搶答已答錯，無法參加四選一競速！等待其他玩家作答中...';
+        this.stage3StatusMsg.style.color = 'var(--accent-red)';
+      } else {
+        this.stage3StatusMsg.innerText = '🎯 四選一速度搶分！越快選對分數越高 (+100~150分，選錯不扣分)：';
+        this.stage3StatusMsg.style.color = 'var(--accent-cyan)';
+      }
+    }
+    if (this.choices4Container) {
+      this.choices4Container.querySelectorAll('.choice-card-4').forEach(btn => {
+        if (isLockedOut) {
+          btn.classList.add('disabled');
+          btn.disabled = true;
+        }
+      });
+    }
+  }
+
+  renderStage3Choices(choices, isLockedOut = false) {
     this.selectedChoiceId = null;
     const icons = ['▲', '◆', '●', '■'];
     this.choices4Container.innerHTML = choices.map((c, idx) => `
-      <button class="choice-card-4 choice-color-${idx % 4}" data-id="${c.id}">
-        <span class="choice-shape-icon">${icons[idx % 4]}</span>
+      <button class="choice-card-4 choice-color-${idx % 4} ${isLockedOut ? 'disabled' : ''}" data-id="${c.id}" ${isLockedOut ? 'disabled' : ''}>
+        <span class="choice-shape-icon">${isLockedOut ? '🔒' : icons[idx % 4]}</span>
         <span>🎵 ${c.title}${c.artist ? ` - ${c.artist}` : ''}</span>
       </button>
     `).join('');
 
+    this.applyStage3LockState(isLockedOut);
+
     this.choices4Container.querySelectorAll('.choice-card-4').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (this.selectedChoiceId) return;
+        if (isLockedOut || btn.disabled || btn.classList.contains('disabled') || this.selectedChoiceId) return;
         this.selectedChoiceId = btn.getAttribute('data-id');
         btn.style.boxShadow = '0 0 20px #fff';
         btn.style.border = '2px solid #fff';

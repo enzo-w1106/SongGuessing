@@ -99,6 +99,7 @@ export class GameRoomManager {
           id: room.buzzerWinner.id,
           name: room.buzzerWinner.name
         } : null,
+        lockedOutPlayerIds: Array.from(room.lockedOutPlayerIds),
         // 揭曉時才公開的資訊
         title: isRevealed ? room.currentTrack.title : '？？？',
         artist: isRevealed ? room.currentTrack.artist : '？？？',
@@ -525,9 +526,15 @@ export class GameRoomManager {
    */
   submitStage3Answer(roomCode, socketId, choiceId) {
     const room = this.rooms.get(roomCode);
-    if (!room || room.currentStage !== 'STAGE_3') return;
+    if (!room || room.currentStage !== 'STAGE_3') return { success: false, message: '目前非四選一作答時段！' };
 
-    if (room.stage3Answers.has(socketId)) return; // 不能重複作答
+    if (room.lockedOutPlayerIds.has(socketId)) {
+      return { success: false, message: '您本題搶答已答錯，無法參加四選一！' };
+    }
+
+    if (room.stage3Answers.has(socketId)) {
+      return { success: false, message: '您已經作答過囉！' };
+    }
 
     const isCorrect = choiceId === room.currentTrack.id;
     const remainingTimeRatio = Math.max(0, (room.stageDeadline - Date.now()) / 12000);
@@ -556,11 +563,16 @@ export class GameRoomManager {
       }
     });
 
-    // 檢查是否所有玩家都已作答完畢
-    if (room.stage3Answers.size >= room.players.size) {
+    // 檢查是否所有可作答（未被鎖定）的玩家都已作答完畢
+    const eligiblePlayerCount = Array.from(room.players.keys()).filter(
+      id => !room.lockedOutPlayerIds.has(id)
+    ).length;
+    if (eligiblePlayerCount > 0 && room.stage3Answers.size >= eligiblePlayerCount) {
       if (room.stageTimer) clearTimeout(room.stageTimer);
       this.revealRound(roomCode);
     }
+
+    return { success: true };
   }
 
   /**

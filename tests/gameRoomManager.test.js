@@ -126,3 +126,44 @@ test('結算畫面時，非房主參與者也能點擊「再玩一局」重置�
   assert.equal(room.players.get('host_id').score, 0);
   assert.equal(room.players.get('guest_id').score, 0);
 });
+
+test('搶答答錯後：玩家搶答鈕應被鎖定，且無法參加 Stage 3 四選一', () => {
+  const io = createMockIO();
+  const manager = new GameRoomManager(io);
+  const room = manager.createRoom('host_id', '房主');
+  manager.joinRoom(room.code, 'player_2', '亂猜王');
+
+  room.status = 'PLAYING';
+  room.tracks = [
+    { id: 'track_1', title: '稻香', artist: '周杰倫', artworkUrl: 'http://art.jpg', audioUrl: 'http://audio.mp3' }
+  ];
+  room.currentTrack = room.tracks[0];
+  room.currentRoundIndex = 0;
+
+  // Stage 1: player_2 搶答但答錯
+  manager.startStage1(room.code);
+  assert.equal(manager.buzzIn(room.code, 'player_2').success, true);
+  manager.verifyBuzzerAnswer(room.code, 'player_2', '錯誤歌名');
+
+  // 進入 Stage 2，確認公開狀態包含 lockedOutPlayerIds，且 player_2 不能再按鈴
+  assert.equal(room.currentStage, 'STAGE_2');
+  const publicStateStage2 = manager.getRoomPublicState(room.code);
+  assert.deepEqual(publicStateStage2.currentRound.lockedOutPlayerIds, ['player_2']);
+  const retryBuzz = manager.buzzIn(room.code, 'player_2');
+  assert.equal(retryBuzz.success, false);
+
+  // 進入 Stage 3 四選一：player_2 嘗試提交正解也應被拒絕且不加分
+  manager.startStage3(room.code);
+  assert.equal(room.currentStage, 'STAGE_3');
+  const stage3Blocked = manager.submitStage3Answer(room.code, 'player_2', 'track_1');
+  assert.equal(stage3Blocked.success, false);
+  assert.equal(room.stage3Answers.has('player_2'), false);
+  assert.equal(room.players.get('player_2').score, -150);
+
+  // 未被鎖定的 host_id 作答後，不需等待已被鎖定的 player_2 即直接揭曉 (REVEAL)
+  const stage3Ok = manager.submitStage3Answer(room.code, 'host_id', 'track_1');
+  assert.equal(stage3Ok.success, true);
+  assert.equal(room.currentStage, 'REVEAL');
+  if (room.stageTimer) clearTimeout(room.stageTimer);
+});
+
