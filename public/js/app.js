@@ -133,6 +133,9 @@ class CampfireSongApp {
     this.panelStage3Choices = document.getElementById('panel-stage3-choices');
     this.stage3StatusMsg = document.getElementById('stage3-status-msg');
     this.choices4Container = document.getElementById('choices-4-container');
+    this.panelHostStageControl = document.getElementById('panel-host-stage-control');
+    this.hostStageHint = document.getElementById('host-stage-hint');
+    this.btnAdvanceStage = document.getElementById('btn-advance-stage');
     this.panelRevealControls = document.getElementById('panel-reveal-controls');
     this.revealToastMsg = document.getElementById('reveal-toast-msg');
     this.guestRevealHint = document.getElementById('guest-reveal-hint');
@@ -505,6 +508,14 @@ class CampfireSongApp {
       }
     });
 
+    // 房主手動進入下一階段 (Stage 1 -> Stage 2 -> Stage 3 -> Reveal)
+    if (this.btnAdvanceStage) {
+      this.btnAdvanceStage.addEventListener('click', () => {
+        this.audio.initContext();
+        this.socket.emit('advance_stage', { roomCode: this.currentRoomCode });
+      });
+    }
+
     // 下一題按鈕 (房主)
     this.btnNextRound.addEventListener('click', () => {
       this.socket.emit('next_round', { roomCode: this.currentRoomCode });
@@ -780,6 +791,7 @@ class CampfireSongApp {
     this.panelVerification.style.display = 'none';
     this.panelSomeoneAnswering.style.display = 'none';
     this.panelStage3Choices.style.display = 'none';
+    if (this.panelHostStageControl) this.panelHostStageControl.style.display = 'none';
     this.panelRevealControls.style.display = 'none';
     this.roundScoreboardCard.style.display = 'none';
 
@@ -807,7 +819,7 @@ class CampfireSongApp {
     }
 
     // 啟動倒數計時條
-    this.startCountdownTimer(round.deadline);
+    this.startCountdownTimer(round.deadline, round.stage);
 
     const isLockedOut = Array.isArray(round.lockedOutPlayerIds) && round.lockedOutPlayerIds.includes(this.myPlayerId);
 
@@ -815,6 +827,10 @@ class CampfireSongApp {
       this.stageStatusTitle.innerText = 'STAGE 1：前奏 1.2 秒挑戰 (+300分 / 答錯-150分)';
       this.panelBuzzer.style.display = 'flex';
       this.updateBuzzerLockUI(isLockedOut, '⚡ 前奏 1.2 秒高風險高報酬：答對 +300 分，答錯倒扣 150 分（可扣至負分）！');
+      this.updateHostStageControlUI(
+        '👑 房主控制：確認本階段無人搶答後，點此進入下一階段',
+        '⏭️ 進入下一階段 (Stage 2：3.5 秒提示)'
+      );
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -826,6 +842,10 @@ class CampfireSongApp {
       this.stageStatusTitle.innerText = 'STAGE 2：進階 3.5 秒搶答 (+200分 / 答錯-100分)';
       this.panelBuzzer.style.display = 'flex';
       this.updateBuzzerLockUI(isLockedOut, '🔥 進階 3.5 秒搶答：答對 +200 分，答錯倒扣 100 分（可扣至負分）！');
+      this.updateHostStageControlUI(
+        '👑 房主控制：確認本階段無人搶答後，點此進入四選一競速',
+        '⏭️ 進入下一階段 (Stage 3：全體四選一)'
+      );
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -854,6 +874,16 @@ class CampfireSongApp {
         this.applyStage3LockState(isLockedOut);
       }
       this.panelStage3Choices.style.display = 'block';
+
+      const answered = round.stage3AnsweredCount ?? 0;
+      const eligible = round.stage3EligibleCount ?? this.roomState.players.length;
+      const allDone = eligible > 0 && answered >= eligible;
+      this.updateHostStageControlUI(
+        allDone
+          ? `✅ 全體可作答玩家皆已選完 (${answered}/${eligible})！可立即揭曉答案`
+          : `👑 房主控制：目前四選一已作答 ${answered} / ${eligible} 人`,
+        '🎉 結束作答，揭曉本題答案！'
+      );
 
       if (isNewStage && shouldPlayAudio && round.audioUrl) {
         this.vinylDisc.classList.add('spinning');
@@ -884,6 +914,21 @@ class CampfireSongApp {
     }
   }
 
+  updateHostStageControlUI(hintText, btnLabel) {
+    if (!this.panelHostStageControl) return;
+    if (this.isHost) {
+      this.panelHostStageControl.style.display = 'block';
+      if (this.hostStageHint) {
+        this.hostStageHint.innerText = hintText;
+      }
+      if (this.btnAdvanceStage) {
+        this.btnAdvanceStage.innerHTML = `<span>${btnLabel}</span>`;
+      }
+    } else {
+      this.panelHostStageControl.style.display = 'none';
+    }
+  }
+
   updateBuzzerLockUI(isLockedOut, defaultStatusText) {
     if (!this.btnBuzzer) return;
     if (isLockedOut) {
@@ -909,10 +954,11 @@ class CampfireSongApp {
     }
   }
 
-  startCountdownTimer(deadline) {
+  startCountdownTimer(deadline, stage = '') {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    const isManualStage = (stage === 'STAGE_1' || stage === 'STAGE_2' || stage === 'STAGE_3');
     if (!deadline) {
-      this.stageTimerText.innerText = '--:--';
+      this.stageTimerText.innerText = isManualStage ? '等待房主推進' : '--:--';
       this.timerBarFill.style.width = '0%';
       return;
     }
@@ -921,12 +967,14 @@ class CampfireSongApp {
     const update = () => {
       const remaining = Math.max(0, deadline - Date.now());
       const sec = (remaining / 1000).toFixed(1);
-      this.stageTimerText.innerText = `${sec}s`;
       const pct = Math.min(100, Math.max(0, (remaining / totalDuration) * 100));
       this.timerBarFill.style.width = `${pct}%`;
 
       if (remaining <= 0) {
+        this.stageTimerText.innerText = isManualStage ? '等待房主推進' : '0.0s';
         clearInterval(this.timerInterval);
+      } else {
+        this.stageTimerText.innerText = `${sec}s`;
       }
     };
     update();

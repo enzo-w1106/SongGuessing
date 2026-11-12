@@ -215,6 +215,11 @@ io.on('connection', (socket) => {
     roomManager.submitStage3Answer(roomCode, socket.id, choiceId);
   });
 
+  // 房主手動進入下一階段 (Stage 1 -> Stage 2 -> Stage 3 -> Reveal)
+  socket.on('advance_stage', ({ roomCode }) => {
+    roomManager.advanceStage(roomCode, socket.id);
+  });
+
   // 下一題 (房主手動觸發)
   socket.on('next_round', ({ roomCode }) => {
     const room = roomManager.rooms.get(roomCode);

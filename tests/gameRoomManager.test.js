@@ -95,9 +95,14 @@ test('三階段搶答驗證：答對加分且揭曉、答錯扣分且不洩漏�
   const p2 = room.players.get('player_2');
   assert.equal(p2.score, -150); // Stage 1 答錯倒扣 150 分（可扣至負分）
   assert.ok(room.lockedOutPlayerIds.has('player_2'));
-  // 關鍵驗證：答錯不能揭曉，且由 Stage 1 推進至 Stage 2！
-  assert.equal(room.currentStage, 'STAGE_2');
+  // 關鍵驗證：答錯不能揭曉，且不自動跳階段，維持在 STAGE_1 等候其他人搶答或房主手動推進
+  assert.equal(room.currentStage, 'STAGE_1');
   assert.equal(manager.getRoomPublicState(room.code).currentRound.title, '？？？');
+
+  // 非房主嘗試推進階段應被拒絕；由房主手動推進至 Stage 2
+  assert.equal(manager.advanceStage(room.code, 'player_2'), false);
+  assert.equal(manager.advanceStage(room.code, 'host_id'), true);
+  assert.equal(room.currentStage, 'STAGE_2');
 
   // 情況 2: host_id 在 Stage 2 搶答並答對（說「十年」）
   const buzzResult2 = manager.buzzIn(room.code, 'host_id');
@@ -127,7 +132,7 @@ test('結算畫面時，非房主參與者也能點擊「再玩一局」重置�
   assert.equal(room.players.get('guest_id').score, 0);
 });
 
-test('搶答答錯後：玩家搶答鈕應被鎖定，且無法參加 Stage 3 四選一', () => {
+test('搶答答錯後：玩家搶答鈕應被鎖定，且無法參加 Stage 3 四選一；各階段皆由房主手動推進', () => {
   const io = createMockIO();
   const manager = new GameRoomManager(io);
   const room = manager.createRoom('host_id', '房主');
@@ -145,25 +150,31 @@ test('搶答答錯後：玩家搶答鈕應被鎖定，且無法參加 Stage 3 �
   assert.equal(manager.buzzIn(room.code, 'player_2').success, true);
   manager.verifyBuzzerAnswer(room.code, 'player_2', '錯誤歌名');
 
-  // 進入 Stage 2，確認公開狀態包含 lockedOutPlayerIds，且 player_2 不能再按鈴
+  // 答錯後維持在 Stage 1，房主點選進入 Stage 2
+  assert.equal(room.currentStage, 'STAGE_1');
+  assert.equal(manager.advanceStage(room.code, 'host_id'), true);
   assert.equal(room.currentStage, 'STAGE_2');
+
   const publicStateStage2 = manager.getRoomPublicState(room.code);
   assert.deepEqual(publicStateStage2.currentRound.lockedOutPlayerIds, ['player_2']);
   const retryBuzz = manager.buzzIn(room.code, 'player_2');
   assert.equal(retryBuzz.success, false);
 
-  // 進入 Stage 3 四選一：player_2 嘗試提交正解也應被拒絕且不加分
-  manager.startStage3(room.code);
+  // 房主點選進入 Stage 3 四選一：player_2 嘗試提交正解也應被拒絕且不加分
+  assert.equal(manager.advanceStage(room.code, 'host_id'), true);
   assert.equal(room.currentStage, 'STAGE_3');
   const stage3Blocked = manager.submitStage3Answer(room.code, 'player_2', 'track_1');
   assert.equal(stage3Blocked.success, false);
   assert.equal(room.stage3Answers.has('player_2'), false);
   assert.equal(room.players.get('player_2').score, -150);
 
-  // 未被鎖定的 host_id 作答後，不需等待已被鎖定的 player_2 即直接揭曉 (REVEAL)
+  // 未被鎖定的 host_id 作答後，等待房主手動點選揭曉才進入 REVEAL
   const stage3Ok = manager.submitStage3Answer(room.code, 'host_id', 'track_1');
   assert.equal(stage3Ok.success, true);
+  assert.equal(room.currentStage, 'STAGE_3');
+  assert.equal(manager.advanceStage(room.code, 'host_id'), true);
   assert.equal(room.currentStage, 'REVEAL');
   if (room.stageTimer) clearTimeout(room.stageTimer);
 });
+
 

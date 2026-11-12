@@ -89,6 +89,9 @@ export class GameRoomManager {
     let currentRoundData = null;
     if (room.currentTrack && room.status === 'PLAYING') {
       const isRevealed = room.currentStage === 'REVEAL';
+      const eligibleCount = Array.from(room.players.keys()).filter(
+        id => !room.lockedOutPlayerIds.has(id)
+      ).length;
       currentRoundData = {
         roundIndex: room.currentRoundIndex,
         totalRounds: room.tracks.length,
@@ -100,6 +103,8 @@ export class GameRoomManager {
           name: room.buzzerWinner.name
         } : null,
         lockedOutPlayerIds: Array.from(room.lockedOutPlayerIds),
+        stage3AnsweredCount: room.stage3Answers.size,
+        stage3EligibleCount: eligibleCount,
         // 揭曉時才公開的資訊
         title: isRevealed ? room.currentTrack.title : '？？？',
         artist: isRevealed ? room.currentTrack.artist : '？？？',
@@ -336,48 +341,61 @@ export class GameRoomManager {
   }
 
   /**
-   * 階段 1: 1.2 秒前奏搶答 (300 分)
+   * 階段 1: 1.2 秒前奏搶答 (300 分) — 由房主手動決定何時進入下一階段
    */
   startStage1(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
 
+    if (room.stageTimer) {
+      clearTimeout(room.stageTimer);
+      room.stageTimer = null;
+    }
     room.currentStage = 'STAGE_1';
     room.buzzerWinner = null;
-    const duration = 7000; // 播放 1.2 秒 + 給予 5.8 秒思考搶答時間
+    const duration = 7000; // 播放 1.2 秒提示倒數參考條，跑完後不自動跳階段，由房主控制推進
     room.stageDeadline = Date.now() + duration;
 
     this.broadcastRoomState(roomCode);
-
-    room.stageTimer = setTimeout(() => {
-      // 時間內無人按鈴搶答，自動進入 Stage 2
-      if (room.currentStage === 'STAGE_1') {
-        this.startStage2(roomCode);
-      }
-    }, duration);
   }
 
   /**
-   * 階段 2: 3.5 秒進階搶答 (200 分)
+   * 階段 2: 3.5 秒進階搶答 (200 分) — 由房主手動決定何時進入下一階段
    */
   startStage2(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
 
-    if (room.stageTimer) clearTimeout(room.stageTimer);
+    if (room.stageTimer) {
+      clearTimeout(room.stageTimer);
+      room.stageTimer = null;
+    }
     room.currentStage = 'STAGE_2';
     room.buzzerWinner = null;
-    const duration = 9000; // 播放 3.5 秒 + 給予 5.5 秒思考搶答
+    const duration = 9000; // 播放 3.5 秒提示倒數參考條，跑完後不自動跳階段，由房主控制推進
     room.stageDeadline = Date.now() + duration;
 
     this.broadcastRoomState(roomCode);
+  }
 
-    room.stageTimer = setTimeout(() => {
-      // 時間內無人搶答，進入 Stage 3 全體四選一競速
-      if (room.currentStage === 'STAGE_2') {
-        this.startStage3(roomCode);
-      }
-    }, duration);
+  /**
+   * 房主手動推進至下一階段 (STAGE_1 -> STAGE_2 -> STAGE_3 -> REVEAL)
+   */
+  advanceStage(roomCode, socketId) {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.hostId !== socketId || room.status !== 'PLAYING') return false;
+
+    if (room.currentStage === 'STAGE_1') {
+      this.startStage2(roomCode);
+      return true;
+    } else if (room.currentStage === 'STAGE_2') {
+      this.startStage3(roomCode);
+      return true;
+    } else if (room.currentStage === 'STAGE_3') {
+      this.revealRound(roomCode);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -445,7 +463,10 @@ export class GameRoomManager {
     const room = this.rooms.get(roomCode);
     if (!room || room.currentStage !== 'BUZZER_LOCKED' || !room.buzzerWinner) return;
 
-    if (room.stageTimer) clearTimeout(room.stageTimer);
+    if (room.stageTimer) {
+      clearTimeout(room.stageTimer);
+      room.stageTimer = null;
+    }
 
     const player = room.players.get(socketId);
     const correctTrack = room.currentTrack;
@@ -490,35 +511,31 @@ export class GameRoomManager {
         message: `❌ ${player.name} 搶答失敗倒扣 ${penalty} 分（目前 ${player.score} 分）！正解繼續保密中...`
       });
 
-      // 依先前階段繼續遊戲，讓其他人有機會搶
-      if (room.previousStage === 'STAGE_1') {
-        this.startStage2(roomCode); // 前奏 1 秒答錯，進入 3.5 秒
-      } else {
-        this.startStage3(roomCode); // 3.5 秒也答錯，進入 Stage 3 四選一
-      }
+      // 答錯後不自動跳階段，維持在當前階段讓其他人繼續搶答，或由房主點選進入下一階段
+      room.currentStage = room.previousStage || 'STAGE_1';
+      room.buzzerWinner = null;
+      room.stageDeadline = null;
+      this.broadcastRoomState(roomCode);
     }
   }
 
   /**
-   * 階段 3: 全體四選一競速 (答對 +100~150 分 / 答錯 -50 分)
+   * 階段 3: 全體四選一競速 (答對 +100~150 分 / 選錯不扣分) — 由房主手動決定何時揭曉答案
    */
   startStage3(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return;
 
-    if (room.stageTimer) clearTimeout(room.stageTimer);
+    if (room.stageTimer) {
+      clearTimeout(room.stageTimer);
+      room.stageTimer = null;
+    }
     room.currentStage = 'STAGE_3';
     room.buzzerWinner = null;
-    const duration = 12000; // 12 秒倒數
+    const duration = 12000; // 12 秒速度加成計時條，跑完後不自動跳轉，由房主點選揭曉答案
     room.stageDeadline = Date.now() + duration;
 
     this.broadcastRoomState(roomCode);
-
-    room.stageTimer = setTimeout(() => {
-      if (room.currentStage === 'STAGE_3') {
-        this.revealRound(roomCode);
-      }
-    }, duration);
   }
 
   /**
@@ -537,7 +554,9 @@ export class GameRoomManager {
     }
 
     const isCorrect = choiceId === room.currentTrack.id;
-    const remainingTimeRatio = Math.max(0, (room.stageDeadline - Date.now()) / 12000);
+    const remainingTimeRatio = room.stageDeadline
+      ? Math.max(0, (room.stageDeadline - Date.now()) / 12000)
+      : 0;
     // 依作答速度給予 +100 ~ +150 分；選錯不扣分 (0 分)
     const points = isCorrect ? Math.floor(100 + remainingTimeRatio * 50) : 0;
 
@@ -563,14 +582,8 @@ export class GameRoomManager {
       }
     });
 
-    // 檢查是否所有可作答（未被鎖定）的玩家都已作答完畢
-    const eligiblePlayerCount = Array.from(room.players.keys()).filter(
-      id => !room.lockedOutPlayerIds.has(id)
-    ).length;
-    if (eligiblePlayerCount > 0 && room.stage3Answers.size >= eligiblePlayerCount) {
-      if (room.stageTimer) clearTimeout(room.stageTimer);
-      this.revealRound(roomCode);
-    }
+    // 同步廣播最新已作答人數狀態，由房主手動點擊揭曉答案
+    this.broadcastRoomState(roomCode);
 
     return { success: true };
   }

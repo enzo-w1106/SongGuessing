@@ -266,6 +266,16 @@
               <div id="choices-4-container" class="choices-4-grid"></div>
             </div>
 
+            <!-- 房主階段推進控制區 (Stage 1 -> Stage 2 -> Stage 3 -> Reveal) -->
+            <div id="panel-host-stage-control" style="display: none; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: center;">
+              <div id="host-stage-hint" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                👑 房主控制：確認本階段無人搶答後，可手動進入下一階段
+              </div>
+              <button id="btn-advance-stage" class="btn-secondary" style="width: 100%; border-color: var(--fire-gold); color: var(--fire-gold); font-weight: 800;">
+                <span>⏭️ 進入下一階段</span>
+              </button>
+            </div>
+
             <!-- E. 揭曉答案與副歌合唱控制 (REVEAL) -->
             <div id="panel-reveal-controls" style="display: none; text-align: center;">
               <div id="reveal-toast-msg" style="font-size: 16px; font-weight: 800; color: var(--fire-gold); margin-bottom: 12px;"></div>
